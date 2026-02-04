@@ -426,6 +426,24 @@ fn student_detail_view(
             .width(Length::Fill)
             .height(Length::Fixed(240.0));
 
+        let legend_item = |label: &str, color: Color| {
+            row![
+                container(Space::new(Length::Fixed(16.0), Length::Fixed(16.0)))
+                    .style(theme::Container::Custom(Box::new(style::ColoredBox(color)))),
+                text(label).size(12).style(style::BASE0),
+            ]
+            .spacing(4)
+            .align_items(Alignment::Center)
+        };
+
+        let legend = row![
+            legend_item("Normal", style::CHART_GREEN),
+            legend_item("Late", style::CHART_YELLOW),
+            legend_item("Absent", style::CHART_RED),
+        ]
+        .spacing(16)
+        .align_items(Alignment::Center);
+
         return column![
             text("SELECTED STUDENT").size(14).style(style::BASE1),
             Space::with_height(Length::Fixed(10.0)),
@@ -433,6 +451,7 @@ fn student_detail_view(
             Space::with_height(Length::Fixed(20.0)),
             text("ATTENDANCE DISTRIBUTION").size(14).style(style::BASE1),
             pie,
+            container(legend).width(Length::Fill).center_x(),
         ]
         .spacing(12)
         .padding(16)
@@ -502,9 +521,9 @@ impl canvas::Program<Message> for PieChart {
             let radius = bounds.width.min(bounds.height) * 0.35;
             let mut start_angle = 0.0;
             for (value, color) in [
-                (self.normal, Color::from_rgb(0.0, 1.0, 0.0)),   // Bright green #00ff00
-                (self.late, Color::from_rgb(1.0, 1.0, 0.0)),    // Bright yellow #ffff00
-                (self.absent, Color::from_rgb(1.0, 0.0, 0.0)),  // Bright red #ff0000
+                (self.normal, style::CHART_GREEN),
+                (self.late, style::CHART_YELLOW),
+                (self.absent, style::CHART_RED),
             ] {
                 let sweep = (value as f32 / total) * std::f32::consts::TAU;
                 if sweep > 0.0 {
@@ -525,6 +544,12 @@ impl canvas::Program<Message> for PieChart {
                         builder.close();
                     });
                     frame.fill(&path, color);
+                    frame.stroke(
+                        &path,
+                        canvas::Stroke::default()
+                            .with_color(style::BASE03)
+                            .with_width(2.0),
+                    );
                 }
                 start_angle += sweep;
             }
