@@ -555,9 +555,20 @@ fn write_text(path: &Path, report: &AttendanceReport) -> Result<(), String> {
 }
 
 fn write_pdf(path: &Path, report: &AttendanceReport) -> Result<(), String> {
-    let font_family =
-        genpdf::fonts::from_files("/usr/share/fonts/truetype/dejavu", "DejaVuSans", None)
-            .map_err(|error| format!("Failed to load fonts: {error}"))?;
+    let font_data = include_bytes!("../assets/fonts/DejaVuSans.ttf");
+    let bold_data = include_bytes!("../assets/fonts/DejaVuSans-Bold.ttf");
+
+    let font = genpdf::fonts::FontData::new(font_data.to_vec(), None)
+        .map_err(|e| format!("Failed to load font: {}", e))?;
+    let bold_font = genpdf::fonts::FontData::new(bold_data.to_vec(), None)
+        .map_err(|e| format!("Failed to load bold font: {}", e))?;
+
+    let font_family = genpdf::fonts::FontFamily {
+        regular: font.clone(),
+        bold: bold_font.clone(),
+        italic: font,
+        bold_italic: bold_font,
+    };
     let mut doc = genpdf::Document::new(font_family);
     doc.set_title("Attendance Report");
     doc.push(genpdf::elements::Paragraph::new("Attendance Report"));
