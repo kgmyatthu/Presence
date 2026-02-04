@@ -20,7 +20,22 @@ pub const BLUE: Color = Color::from_rgb(0.149, 0.545, 0.824); // #268bd2
 pub const CYAN: Color = Color::from_rgb(0.165, 0.631, 0.596); // #2aa198
 pub const GREEN: Color = Color::from_rgb(0.522, 0.6, 0.0); // #859900
 
+pub const CHART_GREEN: Color = Color::from_rgb(0.0, 1.0, 0.0);
+pub const CHART_YELLOW: Color = Color::from_rgb(1.0, 1.0, 0.0);
+pub const CHART_RED: Color = Color::from_rgb(1.0, 0.0, 0.0);
+
 // --- Container Styles ---
+
+pub struct ColoredBox(pub Color);
+impl container::StyleSheet for ColoredBox {
+    type Style = Theme;
+    fn appearance(&self, _theme: &Theme) -> container::Appearance {
+        container::Appearance {
+            background: Some(Background::Color(self.0)),
+            ..container::Appearance::default()
+        }
+    }
+}
 
 pub struct MainBg;
 impl container::StyleSheet for MainBg {
