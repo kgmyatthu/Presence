@@ -4,6 +4,7 @@ use std::io::Write;
 use std::path::{Path, PathBuf};
 
 use genpdf::{style::{Color, Style}, Element};
+use genpdf::elements::PaddedElement;
 use calamine::{Data, Reader, Xlsx};
 use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
 use csv::StringRecord;
@@ -600,13 +601,13 @@ fn write_pdf(path: &Path, report: &AttendanceReport) -> Result<(), String> {
 
     table
         .row()
-        .element(genpdf::elements::Paragraph::new("Name").styled(header_style))
-        .element(genpdf::elements::Paragraph::new("Surname").styled(header_style))
-        .element(genpdf::elements::Paragraph::new("ID").styled(header_style))
-        .element(genpdf::elements::Paragraph::new("Normal").styled(header_style))
-        .element(genpdf::elements::Paragraph::new("Late").styled(header_style))
-        .element(genpdf::elements::Paragraph::new("Absent").styled(header_style))
-        .element(genpdf::elements::Paragraph::new("Score").styled(header_style))
+        .element(padded_text("Name", header_style))
+        .element(padded_text("Surname", header_style))
+        .element(padded_text("ID", header_style))
+        .element(padded_text("Normal", header_style))
+        .element(padded_text("Late", header_style))
+        .element(padded_text("Absent", header_style))
+        .element(padded_text("Score", header_style))
         .push()
         .map_err(|error| format!("Failed to write PDF header: {error}"))?;
     for (i, student) in report.students.iter().enumerate() {
@@ -614,16 +615,16 @@ fn write_pdf(path: &Path, report: &AttendanceReport) -> Result<(), String> {
         let row_style = Style::new().with_color(color);
         table
             .row()
-            .element(genpdf::elements::Paragraph::new(&student.name).styled(row_style))
-            .element(genpdf::elements::Paragraph::new(&student.surname).styled(row_style))
-            .element(genpdf::elements::Paragraph::new(&student.id).styled(row_style))
-            .element(genpdf::elements::Paragraph::new(student.normal.to_string()).styled(row_style))
-            .element(genpdf::elements::Paragraph::new(student.late.to_string()).styled(row_style))
-            .element(genpdf::elements::Paragraph::new(student.absent.to_string()).styled(row_style))
-            .element(genpdf::elements::Paragraph::new(format!(
+            .element(padded_text(student.name.clone(), row_style))
+            .element(padded_text(student.surname.clone(), row_style))
+            .element(padded_text(student.id.clone(), row_style))
+            .element(padded_text(student.normal.to_string(), row_style))
+            .element(padded_text(student.late.to_string(), row_style))
+            .element(padded_text(student.absent.to_string(), row_style))
+            .element(padded_text(format!(
                 "{:.1}/{:.1}",
                 student.score, report.total_points
-            )).styled(row_style))
+            ), row_style))
             .push()
             .map_err(|error| format!("Failed to write PDF row: {error}"))?;
     }
@@ -631,6 +632,13 @@ fn write_pdf(path: &Path, report: &AttendanceReport) -> Result<(), String> {
     doc.render_to_file(&final_path)
         .map_err(|error| format!("Failed to write PDF: {error}"))?;
     Ok(())
+}
+
+fn padded_text(text: impl Into<String>, style: Style) -> impl Element {
+    PaddedElement::new(
+        genpdf::elements::Paragraph::new(text.into()).styled(style),
+        genpdf::Margins::trbl(2.0, 2.0, 2.0, 2.0),
+    )
 }
 
 fn cell_to_string(cell: &Data) -> String {
