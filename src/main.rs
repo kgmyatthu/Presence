@@ -359,11 +359,11 @@ impl Application for App {
         .width(Length::Fill);
 
         let content = column![
+            status_bar,
             input_container,
             row![list_container, detail_container]
                 .height(Length::Fill)
                 .spacing(16),
-            status_bar
         ]
         .spacing(16)
         .padding(16);
