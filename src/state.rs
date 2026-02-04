@@ -637,7 +637,7 @@ fn write_pdf(path: &Path, report: &AttendanceReport) -> Result<(), String> {
 fn padded_text(text: impl Into<String>, style: Style) -> impl Element {
     PaddedElement::new(
         genpdf::elements::Paragraph::new(text.into()).styled(style),
-        genpdf::Margins::trbl(2.0, 2.0, 2.0, 2.0),
+        genpdf::Margins::trbl(5.0, 2.0, 5.0, 2.0),
     )
 }
 
