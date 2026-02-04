@@ -3,6 +3,7 @@ use std::fs::File;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 
+use genpdf::{style::{Color, Style}, Element};
 use calamine::{Data, Reader, Xlsx};
 use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
 use csv::StringRecord;
@@ -581,33 +582,48 @@ fn write_pdf(path: &Path, report: &AttendanceReport) -> Result<(), String> {
     };
     let mut doc = genpdf::Document::new(font_family);
     doc.set_title("Attendance Report");
-    doc.push(genpdf::elements::Paragraph::new("Attendance Report"));
-    let mut table = genpdf::elements::TableLayout::new(vec![1, 1, 1, 1, 1, 1, 1]);
-    table.set_cell_decorator(genpdf::elements::FrameCellDecorator::new(true, true, false));
+
+    let blue = Color::Rgb(38, 139, 210);
+    let violet = Color::Rgb(108, 113, 196);
+    let base01 = Color::Rgb(88, 110, 117);
+    let base00 = Color::Rgb(101, 123, 131);
+
+    let mut title = genpdf::elements::Paragraph::new("Attendance Report");
+    title.set_alignment(genpdf::Alignment::Center);
+    doc.push(title.styled(Style::new().with_color(violet).with_font_size(20).bold()));
+    doc.push(genpdf::elements::Break::new(1.0));
+
+    let mut table = genpdf::elements::TableLayout::new(vec![3, 3, 2, 1, 1, 1, 2]);
+    table.set_cell_decorator(genpdf::elements::FrameCellDecorator::new(true, true, true));
+
+    let header_style = Style::new().with_color(blue).bold();
+
     table
         .row()
-        .element(genpdf::elements::Paragraph::new("Name"))
-        .element(genpdf::elements::Paragraph::new("Surname"))
-        .element(genpdf::elements::Paragraph::new("ID"))
-        .element(genpdf::elements::Paragraph::new("Normal"))
-        .element(genpdf::elements::Paragraph::new("Late"))
-        .element(genpdf::elements::Paragraph::new("Absent"))
-        .element(genpdf::elements::Paragraph::new("Score"))
+        .element(genpdf::elements::Paragraph::new("Name").styled(header_style))
+        .element(genpdf::elements::Paragraph::new("Surname").styled(header_style))
+        .element(genpdf::elements::Paragraph::new("ID").styled(header_style))
+        .element(genpdf::elements::Paragraph::new("Normal").styled(header_style))
+        .element(genpdf::elements::Paragraph::new("Late").styled(header_style))
+        .element(genpdf::elements::Paragraph::new("Absent").styled(header_style))
+        .element(genpdf::elements::Paragraph::new("Score").styled(header_style))
         .push()
         .map_err(|error| format!("Failed to write PDF header: {error}"))?;
-    for student in &report.students {
+    for (i, student) in report.students.iter().enumerate() {
+        let color = if i % 2 == 0 { base01 } else { base00 };
+        let row_style = Style::new().with_color(color);
         table
             .row()
-            .element(genpdf::elements::Paragraph::new(&student.name))
-            .element(genpdf::elements::Paragraph::new(&student.surname))
-            .element(genpdf::elements::Paragraph::new(&student.id))
-            .element(genpdf::elements::Paragraph::new(student.normal.to_string()))
-            .element(genpdf::elements::Paragraph::new(student.late.to_string()))
-            .element(genpdf::elements::Paragraph::new(student.absent.to_string()))
+            .element(genpdf::elements::Paragraph::new(&student.name).styled(row_style))
+            .element(genpdf::elements::Paragraph::new(&student.surname).styled(row_style))
+            .element(genpdf::elements::Paragraph::new(&student.id).styled(row_style))
+            .element(genpdf::elements::Paragraph::new(student.normal.to_string()).styled(row_style))
+            .element(genpdf::elements::Paragraph::new(student.late.to_string()).styled(row_style))
+            .element(genpdf::elements::Paragraph::new(student.absent.to_string()).styled(row_style))
             .element(genpdf::elements::Paragraph::new(format!(
                 "{:.1}/{:.1}",
                 student.score, report.total_points
-            )))
+            )).styled(row_style))
             .push()
             .map_err(|error| format!("Failed to write PDF row: {error}"))?;
     }
