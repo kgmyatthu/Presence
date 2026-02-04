@@ -25,6 +25,7 @@ const SCORE_COLUMN_WIDTH: f32 = 100.0;
 
 fn main() -> iced::Result {
     App::run(Settings {
+        antialiasing: true,
         window: iced::window::Settings {
             min_size: Some(Size::new(900.0, 700.0)),
             ..iced::window::Settings::default()
