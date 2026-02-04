@@ -2,27 +2,30 @@ use iced::overlay::menu;
 use iced::widget::{button, container, pick_list, scrollable, text_input};
 use iced::{Background, Border, Color, Shadow, Theme, Vector};
 
-// Solarized Dark Palette
-pub const BASE03: Color = Color::from_rgb(0.0, 0.169, 0.212); // #002b36
-pub const BASE02: Color = Color::from_rgb(0.027, 0.212, 0.259); // #073642
-pub const BASE01: Color = Color::from_rgb(0.345, 0.431, 0.459); // #586e75
-pub const BASE00: Color = Color::from_rgb(0.396, 0.482, 0.514); // #657b83
-pub const BASE0: Color = Color::from_rgb(0.514, 0.580, 0.588); // #839496
-pub const BASE1: Color = Color::from_rgb(0.576, 0.631, 0.631); // #93a1a1
+// Aggressive Solarized Dark Palette
+// Darker backgrounds for higher contrast
+pub const BASE03: Color = Color::from_rgb(0.0, 0.08, 0.1); // #00141a - Deepest Background
+pub const BASE02: Color = Color::from_rgb(0.0, 0.125, 0.15); // #002026 - Panel Background
+pub const BASE01: Color = Color::from_rgb(0.345, 0.431, 0.459); // #586e75 - Comments/Secondary Content
+pub const BASE00: Color = Color::from_rgb(0.46, 0.55, 0.58); // #758b93 - Content
+pub const BASE0: Color = Color::from_rgb(0.67, 0.74, 0.73); // #aabcb9 - Body Text
+pub const BASE1: Color = Color::from_rgb(0.8, 0.85, 0.85); // #cceaea - Emphasized Content
 pub const BASE2: Color = Color::from_rgb(0.933, 0.91, 0.835); // #eee8d5
 pub const BASE3: Color = Color::from_rgb(0.992, 0.965, 0.89); // #fdf6e3
-pub const YELLOW: Color = Color::from_rgb(0.71, 0.537, 0.0); // #b58900
-pub const ORANGE: Color = Color::from_rgb(0.796, 0.294, 0.086); // #cb4b16
-pub const RED: Color = Color::from_rgb(0.863, 0.196, 0.184); // #dc322f
-pub const MAGENTA: Color = Color::from_rgb(0.827, 0.212, 0.51); // #d33682
-pub const VIOLET: Color = Color::from_rgb(0.424, 0.443, 0.769); // #6c71c4
-pub const BLUE: Color = Color::from_rgb(0.149, 0.545, 0.824); // #268bd2
-pub const CYAN: Color = Color::from_rgb(0.165, 0.631, 0.596); // #2aa198
-pub const GREEN: Color = Color::from_rgb(0.522, 0.6, 0.0); // #859900
 
-pub const CHART_GREEN: Color = Color::from_rgb(0.0, 1.0, 0.0);
-pub const CHART_YELLOW: Color = Color::from_rgb(1.0, 1.0, 0.0);
-pub const CHART_RED: Color = Color::from_rgb(1.0, 0.0, 0.0);
+// Neon / Vibrant Accents
+pub const YELLOW: Color = Color::from_rgb(0.94, 0.78, 0.0); // #f0c600
+pub const ORANGE: Color = Color::from_rgb(1.0, 0.37, 0.0); // #ff5f00
+pub const RED: Color = Color::from_rgb(1.0, 0.2, 0.2); // #ff3333
+pub const MAGENTA: Color = Color::from_rgb(1.0, 0.2, 0.8); // #ff33cc
+pub const VIOLET: Color = Color::from_rgb(0.53, 0.53, 1.0); // #8888ff
+pub const BLUE: Color = Color::from_rgb(0.0, 0.53, 1.0); // #0088ff
+pub const CYAN: Color = Color::from_rgb(0.0, 1.0, 0.8); // #00ffcc
+pub const GREEN: Color = Color::from_rgb(0.2, 1.0, 0.0); // #33ff00
+
+pub const CHART_GREEN: Color = GREEN;
+pub const CHART_YELLOW: Color = YELLOW;
+pub const CHART_RED: Color = RED;
 
 // --- Container Styles ---
 
@@ -57,7 +60,7 @@ impl container::StyleSheet for Panel {
             text_color: Some(BASE0),
             background: Some(Background::Color(BASE02)),
             border: Border {
-                color: BASE01,
+                color: BASE00, // Brighter border for panels
                 width: 1.0,
                 radius: 0.0.into(),
             },
@@ -74,7 +77,7 @@ impl container::StyleSheet for BorderedPanel {
             text_color: Some(BASE0),
             background: Some(Background::Color(BASE03)),
             border: Border {
-                color: BASE01,
+                color: BLUE, // Aggressive Blue Border
                 width: 1.0,
                 radius: 0.0.into(),
             },
@@ -92,7 +95,7 @@ impl text_input::StyleSheet for TextInput {
         text_input::Appearance {
             background: Background::Color(BASE02),
             border: Border {
-                color: BASE01,
+                color: BASE00,
                 width: 1.0,
                 radius: 0.0.into(),
             },
@@ -103,7 +106,8 @@ impl text_input::StyleSheet for TextInput {
     fn focused(&self, theme: &Theme) -> text_input::Appearance {
         text_input::Appearance {
             border: Border {
-                color: CYAN,
+                color: CYAN, // Neon Cyan focus
+                width: 1.5,
                 ..self.active(theme).border
             },
             ..self.active(theme)
@@ -113,7 +117,7 @@ impl text_input::StyleSheet for TextInput {
     fn hovered(&self, theme: &Theme) -> text_input::Appearance {
         text_input::Appearance {
             border: Border {
-                color: BASE0,
+                color: BASE1, // Bright hover
                 ..self.active(theme).border
             },
             ..self.active(theme)
@@ -133,7 +137,7 @@ impl text_input::StyleSheet for TextInput {
     }
 
     fn value_color(&self, _theme: &Theme) -> Color {
-        BASE0
+        BASE1 // Brighter text value
     }
 
     fn disabled_color(&self, _theme: &Theme) -> Color {
@@ -155,7 +159,7 @@ impl button::StyleSheet for Button {
             background: Some(Background::Color(BASE02)),
             text_color: BASE0,
             border: Border {
-                color: BASE01,
+                color: BASE00, // Stronger border
                 width: 1.0,
                 radius: 0.0.into(),
             },
@@ -170,7 +174,7 @@ impl button::StyleSheet for Button {
             background: Some(Background::Color(BASE01)),
             text_color: BASE3,
             border: Border {
-                color: BASE0,
+                color: CYAN, // Cyan hover
                 ..active.border
             },
             ..active
@@ -181,7 +185,7 @@ impl button::StyleSheet for Button {
         let active = self.active(theme);
         button::Appearance {
             background: Some(Background::Color(BASE03)),
-            text_color: BASE0,
+            text_color: CYAN,
             ..active
         }
     }
@@ -205,10 +209,10 @@ impl button::StyleSheet for PrimaryButton {
     type Style = Theme;
     fn active(&self, _theme: &Theme) -> button::Appearance {
         button::Appearance {
-            background: Some(Background::Color(CYAN)),
-            text_color: BASE03,
+            background: Some(Background::Color(BLUE)), // Electric Blue
+            text_color: BASE03, // Dark text on bright bg
             border: Border {
-                color: BASE01,
+                color: CYAN,
                 width: 1.0,
                 radius: 0.0.into(),
             },
@@ -220,7 +224,7 @@ impl button::StyleSheet for PrimaryButton {
     fn hovered(&self, theme: &Theme) -> button::Appearance {
         let active = self.active(theme);
         button::Appearance {
-            background: Some(Background::Color(BLUE)),
+            background: Some(Background::Color(CYAN)), // Cyan on hover
             ..active
         }
     }
@@ -228,8 +232,12 @@ impl button::StyleSheet for PrimaryButton {
     fn pressed(&self, theme: &Theme) -> button::Appearance {
         let active = self.active(theme);
         button::Appearance {
-            background: Some(Background::Color(BASE02)),
+            background: Some(Background::Color(BASE03)),
             text_color: CYAN,
+            border: Border {
+                color: BLUE,
+                ..active.border
+            },
             ..active
         }
     }
@@ -260,9 +268,9 @@ impl scrollable::StyleSheet for Scrollable {
                     radius: 0.0.into(),
                 },
                 scroller: scrollable::Scroller {
-                    color: BASE01,
+                    color: BASE00, // Visible scroller
                     border: Border {
-                        color: BASE01,
+                        color: BASE00,
                         width: 0.0,
                         radius: 0.0.into(),
                     },
@@ -273,11 +281,31 @@ impl scrollable::StyleSheet for Scrollable {
     }
 
     fn hovered(&self, theme: &Theme, _is_mouse_over: bool) -> scrollable::Appearance {
-        self.active(theme)
+        let active = self.active(theme);
+        scrollable::Appearance {
+            scrollbar: scrollable::Scrollbar {
+                scroller: scrollable::Scroller {
+                    color: BLUE, // Blue scroller on hover
+                    ..active.scrollbar.scroller
+                },
+                ..active.scrollbar
+            },
+            ..active
+        }
     }
 
     fn dragging(&self, theme: &Theme) -> scrollable::Appearance {
-        self.active(theme)
+        let active = self.active(theme);
+        scrollable::Appearance {
+            scrollbar: scrollable::Scrollbar {
+                scroller: scrollable::Scroller {
+                    color: CYAN, // Cyan scroller dragging
+                    ..active.scrollbar.scroller
+                },
+                ..active.scrollbar
+            },
+            ..active
+        }
     }
 }
 
@@ -293,7 +321,7 @@ impl pick_list::StyleSheet for PickList {
             handle_color: BASE0,
             background: Background::Color(BASE02),
             border: Border {
-                color: BASE01,
+                color: BASE00,
                 width: 1.0,
                 radius: 0.0.into(),
             },
@@ -304,7 +332,7 @@ impl pick_list::StyleSheet for PickList {
         let active = self.active(theme);
         pick_list::Appearance {
             border: Border {
-                color: BASE0,
+                color: CYAN, // Cyan border hover
                 ..active.border
             },
             ..active
@@ -320,7 +348,7 @@ impl menu::StyleSheet for Menu {
             text_color: BASE0,
             background: Background::Color(BASE02),
             border: Border {
-                color: BASE01,
+                color: BLUE, // Blue border for menu
                 width: 1.0,
                 radius: 0.0.into(),
             },
