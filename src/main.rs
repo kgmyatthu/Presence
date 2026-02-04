@@ -7,17 +7,29 @@ use iced::alignment::{Horizontal, Vertical};
 use iced::mouse;
 use iced::widget::canvas::{self, Canvas};
 use iced::widget::{
-    Column, button, column, container, pick_list, row, scrollable, text, text_input,
+    Column, Space, button, column, container, pick_list, row, scrollable, text, text_input,
 };
 use iced::{
     Alignment, Application, Color, Command, Element, Length, Pixels, Point, Radians, Rectangle,
-    Renderer, Settings, Theme, executor,
+    Renderer, Settings, Size, Theme, executor,
 };
 use messages::Message;
 use state::{AppState, AttendanceReport, ReportFormat, StudentRecord};
 
+const NAME_COLUMN_WIDTH: f32 = 150.0;
+const SURNAME_COLUMN_WIDTH: f32 = 150.0;
+const ID_COLUMN_WIDTH: f32 = 120.0;
+const COUNT_COLUMN_WIDTH: f32 = 80.0;
+const SCORE_COLUMN_WIDTH: f32 = 100.0;
+
 fn main() -> iced::Result {
-    App::run(Settings::default())
+    App::run(Settings {
+        window: iced::window::Settings {
+            min_size: Some(Size::new(800.0, 600.0)),
+            ..iced::window::Settings::default()
+        },
+        ..Settings::default()
+    })
 }
 
 struct App {
@@ -275,17 +287,34 @@ fn student_detail_view(
         && let Some(student) = report.students.get(index)
     {
         let score = format!("{:.1}/{:.1}", student.score, report.total_points);
-        let table_row = row![
-            text(&student.name).width(Length::FillPortion(2)),
-            text(&student.surname).width(Length::FillPortion(2)),
-            text(&student.id).width(Length::FillPortion(2)),
-            text(student.normal.to_string()).width(Length::FillPortion(1)),
-            text(student.late.to_string()).width(Length::FillPortion(1)),
-            text(student.absent.to_string()).width(Length::FillPortion(1)),
-            text(score).width(Length::FillPortion(2)),
+        let header_row = row![
+            text("Name").width(Length::Fixed(NAME_COLUMN_WIDTH)),
+            text("Surname").width(Length::Fixed(SURNAME_COLUMN_WIDTH)),
+            text("ID").width(Length::Fixed(ID_COLUMN_WIDTH)),
+            text("Normal").width(Length::Fixed(COUNT_COLUMN_WIDTH)),
+            text("Late").width(Length::Fixed(COUNT_COLUMN_WIDTH)),
+            text("Absent").width(Length::Fixed(COUNT_COLUMN_WIDTH)),
+            text("Score").width(Length::Fixed(SCORE_COLUMN_WIDTH)),
         ]
         .spacing(8)
         .align_items(Alignment::Center);
+        let table_row = row![
+            text(&student.name).width(Length::Fixed(NAME_COLUMN_WIDTH)),
+            text(&student.surname).width(Length::Fixed(SURNAME_COLUMN_WIDTH)),
+            text(&student.id).width(Length::Fixed(ID_COLUMN_WIDTH)),
+            text(student.normal.to_string()).width(Length::Fixed(COUNT_COLUMN_WIDTH)),
+            text(student.late.to_string()).width(Length::Fixed(COUNT_COLUMN_WIDTH)),
+            text(student.absent.to_string()).width(Length::Fixed(COUNT_COLUMN_WIDTH)),
+            text(score).width(Length::Fixed(SCORE_COLUMN_WIDTH)),
+        ]
+        .spacing(8)
+        .align_items(Alignment::Center);
+        let table = column![header_row, table_row]
+            .spacing(8)
+            .align_items(Alignment::Center);
+        let table_scrollable = scrollable(container(table).width(Length::Shrink)).direction(
+            scrollable::Direction::Horizontal(scrollable::Properties::new()),
+        );
 
         let pie = Canvas::new(PieChart::new(student))
             .width(Length::Fill)
@@ -293,17 +322,8 @@ fn student_detail_view(
 
         return column![
             text("Selected Student").size(20),
-            row![
-                text("Name"),
-                text("Surname"),
-                text("ID"),
-                text("Normal"),
-                text("Late"),
-                text("Absent"),
-                text("Score"),
-            ]
-            .spacing(8),
-            table_row,
+            table_scrollable,
+            Space::with_height(Length::Fixed(0.0)),
             text("Attendance Distribution").size(20),
             pie,
         ]
