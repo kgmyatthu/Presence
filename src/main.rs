@@ -405,7 +405,12 @@ impl canvas::Program<Message> for PieChart {
                     };
                     let path = canvas::Path::new(|builder| {
                         builder.move_to(center);
+                        builder.line_to(Point::new(
+                            center.x + radius * start_angle.cos(),
+                            center.y + radius * start_angle.sin(),
+                        ));
                         builder.arc(arc);
+                        builder.line_to(center);
                         builder.close();
                     });
                     frame.fill(&path, color);
