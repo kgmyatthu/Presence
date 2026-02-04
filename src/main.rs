@@ -525,6 +525,12 @@ impl canvas::Program<Message> for PieChart {
                         builder.close();
                     });
                     frame.fill(&path, color);
+                    frame.stroke(
+                        &path,
+                        canvas::Stroke::default()
+                            .with_color(style::BASE03)
+                            .with_width(2.0),
+                    );
                 }
                 start_angle += sweep;
             }
