@@ -1,5 +1,6 @@
 mod messages;
 mod state;
+mod style;
 
 use std::path::PathBuf;
 
@@ -10,8 +11,8 @@ use iced::widget::{
     Column, Space, button, column, container, pick_list, row, scrollable, text, text_input,
 };
 use iced::{
-    Alignment, Application, Color, Command, Element, Length, Pixels, Point, Radians, Rectangle,
-    Renderer, Settings, Size, Theme, executor,
+    Alignment, Application, Color, Command, Element, Font, Length, Pixels, Point, Radians, Rectangle,
+    Renderer, Settings, Size, Theme, executor, theme,
 };
 use messages::Message;
 use state::{AppState, AttendanceReport, ReportFormat, StudentRecord};
@@ -25,9 +26,10 @@ const SCORE_COLUMN_WIDTH: f32 = 100.0;
 fn main() -> iced::Result {
     App::run(Settings {
         window: iced::window::Settings {
-            min_size: Some(Size::new(800.0, 600.0)),
+            min_size: Some(Size::new(900.0, 700.0)),
             ..iced::window::Settings::default()
         },
+        default_font: Font::MONOSPACE,
         ..Settings::default()
     })
 }
@@ -172,109 +174,204 @@ impl Application for App {
 
     fn view(&self) -> Element<'_, Message> {
         let input_section = column![
-            text("Attendance Input").size(24),
+            text("CONFIGURATION").size(14).style(style::BASE1),
+            Space::with_height(Length::Fixed(10.0)),
             row![
-                text_input("Attendance directory or file", &self.state.directory)
-                    .on_input(Message::DirectoryChanged)
-                    .size(16)
-                    .padding(8)
-                    .width(Length::Fill),
-                button("Browse Folder").on_press(Message::PickDirectory),
-                button("Browse File").on_press(Message::PickFile)
+                column![
+                    text("Attendance Source").size(12).style(style::BASE00),
+                    row![
+                        text_input("Directory or file path...", &self.state.directory)
+                            .on_input(Message::DirectoryChanged)
+                            .style(theme::TextInput::Custom(Box::new(style::TextInput)))
+                            .padding(8)
+                            .width(Length::Fill),
+                        button(text("Folder").size(14))
+                            .on_press(Message::PickDirectory)
+                            .style(theme::Button::Custom(Box::new(style::Button)))
+                            .padding(8),
+                        button(text("File").size(14))
+                            .on_press(Message::PickFile)
+                            .style(theme::Button::Custom(Box::new(style::Button)))
+                            .padding(8)
+                    ]
+                    .spacing(8)
+                ]
+                .width(Length::FillPortion(2))
+                .spacing(4),
+                column![
+                    text("Class Time").size(12).style(style::BASE00),
+                    row![
+                        text_input("Start", &self.state.class_start)
+                            .on_input(Message::ClassStartChanged)
+                            .style(theme::TextInput::Custom(Box::new(style::TextInput)))
+                            .padding(8),
+                        text("-"),
+                        text_input("End", &self.state.class_end)
+                            .on_input(Message::ClassEndChanged)
+                            .style(theme::TextInput::Custom(Box::new(style::TextInput)))
+                            .padding(8),
+                    ]
+                    .spacing(8)
+                    .align_items(Alignment::Center)
+                ]
+                .width(Length::FillPortion(1))
+                .spacing(4),
             ]
-            .spacing(8),
+            .spacing(20),
             row![
-                text_input("Class start (HH:MM)", &self.state.class_start)
-                    .on_input(Message::ClassStartChanged)
-                    .padding(8),
-                text_input("Class end (HH:MM)", &self.state.class_end)
-                    .on_input(Message::ClassEndChanged)
-                    .padding(8),
+                column![
+                    text("Thresholds (Min)").size(12).style(style::BASE00),
+                    row![
+                        text_input("Late", &self.state.late_minutes)
+                            .on_input(Message::LateMinutesChanged)
+                            .style(theme::TextInput::Custom(Box::new(style::TextInput)))
+                            .padding(8),
+                        text_input("Absent", &self.state.absent_minutes)
+                            .on_input(Message::AbsentMinutesChanged)
+                            .style(theme::TextInput::Custom(Box::new(style::TextInput)))
+                            .padding(8),
+                    ]
+                    .spacing(8)
+                ]
+                .spacing(4),
+                column![
+                    text("Grading (Points)").size(12).style(style::BASE00),
+                    row![
+                        text_input("Total", &self.state.total_points)
+                            .on_input(Message::TotalPointsChanged)
+                            .style(theme::TextInput::Custom(Box::new(style::TextInput)))
+                            .padding(8),
+                        text_input("Late Pen.", &self.state.late_penalty)
+                            .on_input(Message::LatePenaltyChanged)
+                            .style(theme::TextInput::Custom(Box::new(style::TextInput)))
+                            .padding(8),
+                        text_input("Absent Pen.", &self.state.absent_penalty)
+                            .on_input(Message::AbsentPenaltyChanged)
+                            .style(theme::TextInput::Custom(Box::new(style::TextInput)))
+                            .padding(8),
+                    ]
+                    .spacing(8)
+                ]
+                .spacing(4),
+                column![
+                    text("Actions").size(12).style(style::BASE00),
+                    row![
+                        pick_list(
+                            ReportFormat::ALL,
+                            Some(self.state.report_format),
+                            Message::ReportFormatChanged
+                        )
+                        .style(theme::PickList::Custom(
+                            std::rc::Rc::new(style::PickList),
+                            std::rc::Rc::new(style::Menu)
+                        )),
+                        button(text("ANALYZE").size(14))
+                            .on_press(Message::RunAnalysis)
+                            .style(theme::Button::Custom(Box::new(style::PrimaryButton)))
+                            .padding(8),
+                        button(text("EXPORT").size(14))
+                            .on_press(Message::ExportReport)
+                            .style(theme::Button::Custom(Box::new(style::Button)))
+                            .padding(8),
+                    ]
+                    .spacing(8)
+                ]
+                .spacing(4)
             ]
-            .spacing(12),
-            row![
-                text_input("Late after minutes", &self.state.late_minutes)
-                    .on_input(Message::LateMinutesChanged)
-                    .padding(8),
-                text_input("Absent after minutes", &self.state.absent_minutes)
-                    .on_input(Message::AbsentMinutesChanged)
-                    .padding(8),
-            ]
-            .spacing(12),
-            row![
-                text_input("Total points", &self.state.total_points)
-                    .on_input(Message::TotalPointsChanged)
-                    .padding(8),
-                text_input("Late penalty", &self.state.late_penalty)
-                    .on_input(Message::LatePenaltyChanged)
-                    .padding(8),
-                text_input("Absent penalty", &self.state.absent_penalty)
-                    .on_input(Message::AbsentPenaltyChanged)
-                    .padding(8),
-            ]
-            .spacing(12),
-            row![
-                pick_list(
-                    ReportFormat::ALL,
-                    Some(self.state.report_format),
-                    Message::ReportFormatChanged
-                ),
-                button("Generate Report").on_press(Message::RunAnalysis),
-                button("Export").on_press(Message::ExportReport),
-            ]
-            .spacing(12),
-            text(&self.state.status).size(16),
+            .spacing(20),
         ]
         .spacing(12)
         .padding(16);
+
+        let input_container = container(input_section)
+            .style(theme::Container::Custom(Box::new(style::Panel)))
+            .width(Length::Fill);
 
         let (students_list, detail_view): (Element<Message>, Element<Message>) =
             if let Some(report) = &self.state.report {
                 let list = report.students.iter().enumerate().fold(
                     Column::new().spacing(4),
                     |col, (index, student)| {
-                        let label =
-                            format!("{} {} ({})", student.name, student.surname, student.id);
-                        let student_button = button(text(label).size(14));
+                        let label = format!(
+                            "{:<20} {:<20} ({})",
+                            student.surname, student.name, student.id
+                        );
+                        let student_button = button(text(label).size(14))
+                            .style(if self.state.selected_student == Some(index) {
+                                theme::Button::Custom(Box::new(style::PrimaryButton))
+                            } else {
+                                theme::Button::Custom(Box::new(style::Button))
+                            })
+                            .width(Length::Fill);
                         col.push(student_button.on_press(Message::SelectStudent(index)))
                     },
                 );
                 let list = scrollable(container(list).padding(8))
                     .height(Length::Fill)
+                    .style(theme::Scrollable::Custom(Box::new(style::Scrollable)))
                     .into();
                 let detail = student_detail_view(report, self.state.selected_student);
                 (list, detail)
             } else {
-                let placeholder = container(text("No report loaded yet."))
+                let placeholder = container(text("No report loaded yet.").style(style::BASE01))
                     .center_x()
                     .center_y()
                     .height(Length::Fill)
                     .into();
                 (
                     placeholder,
-                    container(text("Select a student to view details.")).into(),
+                    container(
+                        text("Select a student to view details.")
+                            .style(style::BASE01)
+                            .size(18),
+                    )
+                    .center_x()
+                    .center_y()
+                    .into(),
                 )
             };
 
-        let content = column![
-            input_section,
-            row![
-                container(students_list)
-                    .width(Length::FillPortion(1))
-                    .height(Length::Fill),
-                container(detail_view)
-                    .width(Length::FillPortion(2))
-                    .height(Length::Fill),
+        let list_container = container(
+            column![
+                text("STUDENTS").size(14).style(style::BASE1),
+                Space::with_height(Length::Fixed(10.0)),
+                students_list
             ]
-            .height(Length::Fill)
-            .spacing(16)
-            .padding(16)
+            .padding(16),
+        )
+        .style(theme::Container::Custom(Box::new(style::Panel)))
+        .width(Length::FillPortion(1))
+        .height(Length::Fill);
+
+        let detail_container = container(detail_view)
+            .style(theme::Container::Custom(Box::new(style::Panel)))
+            .width(Length::FillPortion(2))
+            .height(Length::Fill);
+
+        let status_bar = container(
+            row![
+                text("STATUS: ").style(style::BASE1).size(14),
+                text(&self.state.status).style(style::BASE0).size(14)
+            ]
+            .padding(4),
+        )
+        .style(theme::Container::Custom(Box::new(style::BorderedPanel)))
+        .width(Length::Fill);
+
+        let content = column![
+            input_container,
+            row![list_container, detail_container]
+                .height(Length::Fill)
+                .spacing(16),
+            status_bar
         ]
-        .spacing(16);
+        .spacing(16)
+        .padding(16);
 
         container(content)
             .height(Length::Fill)
             .width(Length::Fill)
+            .style(theme::Container::Custom(Box::new(style::MainBg)))
             .into()
     }
 }
@@ -287,44 +384,54 @@ fn student_detail_view(
         && let Some(student) = report.students.get(index)
     {
         let score = format!("{:.1}/{:.1}", student.score, report.total_points);
+
+        // Helper for table cells
+        let cell = |content: String| container(text(content).size(14)).padding(4);
+
         let header_row = row![
-            text("Name").width(Length::Fixed(NAME_COLUMN_WIDTH)),
-            text("Surname").width(Length::Fixed(SURNAME_COLUMN_WIDTH)),
-            text("ID").width(Length::Fixed(ID_COLUMN_WIDTH)),
-            text("Normal").width(Length::Fixed(COUNT_COLUMN_WIDTH)),
-            text("Late").width(Length::Fixed(COUNT_COLUMN_WIDTH)),
-            text("Absent").width(Length::Fixed(COUNT_COLUMN_WIDTH)),
-            text("Score").width(Length::Fixed(SCORE_COLUMN_WIDTH)),
+            cell("Name".into()).width(Length::Fixed(NAME_COLUMN_WIDTH)),
+            cell("Surname".into()).width(Length::Fixed(SURNAME_COLUMN_WIDTH)),
+            cell("ID".into()).width(Length::Fixed(ID_COLUMN_WIDTH)),
+            cell("Normal".into()).width(Length::Fixed(COUNT_COLUMN_WIDTH)),
+            cell("Late".into()).width(Length::Fixed(COUNT_COLUMN_WIDTH)),
+            cell("Absent".into()).width(Length::Fixed(COUNT_COLUMN_WIDTH)),
+            cell("Score".into()).width(Length::Fixed(SCORE_COLUMN_WIDTH)),
         ]
         .spacing(8)
         .align_items(Alignment::Center);
+
         let table_row = row![
-            text(&student.name).width(Length::Fixed(NAME_COLUMN_WIDTH)),
-            text(&student.surname).width(Length::Fixed(SURNAME_COLUMN_WIDTH)),
-            text(&student.id).width(Length::Fixed(ID_COLUMN_WIDTH)),
-            text(student.normal.to_string()).width(Length::Fixed(COUNT_COLUMN_WIDTH)),
-            text(student.late.to_string()).width(Length::Fixed(COUNT_COLUMN_WIDTH)),
-            text(student.absent.to_string()).width(Length::Fixed(COUNT_COLUMN_WIDTH)),
-            text(score).width(Length::Fixed(SCORE_COLUMN_WIDTH)),
+            cell(student.name.clone()).width(Length::Fixed(NAME_COLUMN_WIDTH)),
+            cell(student.surname.clone()).width(Length::Fixed(SURNAME_COLUMN_WIDTH)),
+            cell(student.id.clone()).width(Length::Fixed(ID_COLUMN_WIDTH)),
+            cell(student.normal.to_string()).width(Length::Fixed(COUNT_COLUMN_WIDTH)),
+            cell(student.late.to_string()).width(Length::Fixed(COUNT_COLUMN_WIDTH)),
+            cell(student.absent.to_string()).width(Length::Fixed(COUNT_COLUMN_WIDTH)),
+            cell(score).width(Length::Fixed(SCORE_COLUMN_WIDTH)),
         ]
         .spacing(8)
         .align_items(Alignment::Center);
-        let table = column![header_row, table_row]
-            .spacing(8)
-            .align_items(Alignment::Center);
-        let table_scrollable = scrollable(container(table).width(Length::Shrink)).direction(
-            scrollable::Direction::Horizontal(scrollable::Properties::new()),
-        );
+
+        let table = column![
+            container(header_row).style(theme::Container::Custom(Box::new(style::BorderedPanel))).padding(4),
+            container(table_row).padding(4)
+        ]
+        .spacing(8);
+
+        let table_scrollable = scrollable(container(table).width(Length::Shrink))
+            .direction(scrollable::Direction::Horizontal(scrollable::Properties::new()))
+            .style(theme::Scrollable::Custom(Box::new(style::Scrollable)));
 
         let pie = Canvas::new(PieChart::new(student))
             .width(Length::Fill)
             .height(Length::Fixed(240.0));
 
         return column![
-            text("Selected Student").size(20),
+            text("SELECTED STUDENT").size(14).style(style::BASE1),
+            Space::with_height(Length::Fixed(10.0)),
             table_scrollable,
-            Space::with_height(Length::Fixed(0.0)),
-            text("Attendance Distribution").size(20),
+            Space::with_height(Length::Fixed(20.0)),
+            text("ATTENDANCE DISTRIBUTION").size(14).style(style::BASE1),
             pie,
         ]
         .spacing(12)
@@ -332,10 +439,14 @@ fn student_detail_view(
         .into();
     }
 
-    container(text("Select a student to view details."))
-        .center_x()
-        .center_y()
-        .into()
+    container(
+        text("Select a student to view details.")
+            .style(style::BASE01)
+            .size(18),
+    )
+    .center_x()
+    .center_y()
+    .into()
 }
 
 async fn pick_directory() -> Option<PathBuf> {
@@ -391,9 +502,9 @@ impl canvas::Program<Message> for PieChart {
             let radius = bounds.width.min(bounds.height) * 0.35;
             let mut start_angle = 0.0;
             for (value, color) in [
-                (self.normal, Color::from_rgb(0.2, 0.7, 0.3)),
-                (self.late, Color::from_rgb(0.95, 0.7, 0.2)),
-                (self.absent, Color::from_rgb(0.9, 0.3, 0.3)),
+                (self.normal, Color::from_rgb(0.0, 1.0, 0.0)),   // Bright green #00ff00
+                (self.late, Color::from_rgb(1.0, 1.0, 0.0)),    // Bright yellow #ffff00
+                (self.absent, Color::from_rgb(1.0, 0.0, 0.0)),  // Bright red #ff0000
             ] {
                 let sweep = (value as f32 / total) * std::f32::consts::TAU;
                 if sweep > 0.0 {
@@ -421,7 +532,7 @@ impl canvas::Program<Message> for PieChart {
             let text = canvas::Text {
                 content: "No attendance data".to_string(),
                 position: Point::new(bounds.width / 2.0, bounds.height / 2.0),
-                color: Color::from_rgb(0.4, 0.4, 0.4),
+                color: style::BASE01,
                 size: Pixels(20.0),
                 horizontal_alignment: Horizontal::Center,
                 vertical_alignment: Vertical::Center,
