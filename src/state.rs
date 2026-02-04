@@ -6,7 +6,7 @@ use std::path::{Path, PathBuf};
 use calamine::{Data, Reader, Xlsx};
 use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
 use csv::StringRecord;
-use encoding_rs::{UTF_8, UTF_16BE, UTF_16LE, WINDOWS_1252};
+use encoding_rs::{UTF_16BE, UTF_16LE, UTF_8, WINDOWS_1252};
 use serde::Serialize;
 
 #[derive(Debug, Clone)]
@@ -555,9 +555,30 @@ fn write_text(path: &Path, report: &AttendanceReport) -> Result<(), String> {
 }
 
 fn write_pdf(path: &Path, report: &AttendanceReport) -> Result<(), String> {
-    let font_family =
-        genpdf::fonts::from_files("/usr/share/fonts/truetype/dejavu", "DejaVuSans", None)
-            .map_err(|error| format!("Failed to load fonts: {error}"))?;
+    let final_path = if let Some(extension) = path.extension() {
+        if extension != "pdf" {
+            path.with_extension("pdf")
+        } else {
+            path.to_path_buf()
+        }
+    } else {
+        path.with_extension("pdf")
+    };
+
+    let font_data = include_bytes!("../assets/fonts/DejaVuSans.ttf");
+    let bold_data = include_bytes!("../assets/fonts/DejaVuSans-Bold.ttf");
+
+    let font = genpdf::fonts::FontData::new(font_data.to_vec(), None)
+        .map_err(|e| format!("Failed to load font: {}", e))?;
+    let bold_font = genpdf::fonts::FontData::new(bold_data.to_vec(), None)
+        .map_err(|e| format!("Failed to load bold font: {}", e))?;
+
+    let font_family = genpdf::fonts::FontFamily {
+        regular: font.clone(),
+        bold: bold_font.clone(),
+        italic: font,
+        bold_italic: bold_font,
+    };
     let mut doc = genpdf::Document::new(font_family);
     doc.set_title("Attendance Report");
     doc.push(genpdf::elements::Paragraph::new("Attendance Report"));
@@ -591,7 +612,7 @@ fn write_pdf(path: &Path, report: &AttendanceReport) -> Result<(), String> {
             .map_err(|error| format!("Failed to write PDF row: {error}"))?;
     }
     doc.push(table);
-    doc.render_to_file(path)
+    doc.render_to_file(&final_path)
         .map_err(|error| format!("Failed to write PDF: {error}"))?;
     Ok(())
 }
