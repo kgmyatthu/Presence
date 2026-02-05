@@ -503,14 +503,14 @@ fn labeled_input(
     container(
         row![
             container(text(label).size(14).style(style::YELLOW))
-                .padding(8)
+                .padding(4)
                 .align_y(Vertical::Center),
             container(Space::new(Length::Fixed(1.0), Length::Fill))
                 .style(theme::Container::Custom(Box::new(style::VerticalSeparator))),
             text_input("", value)
                 .on_input(on_change)
                 .style(theme::TextInput::Custom(Box::new(style::BorderlessInput)))
-                .padding(8)
+                .padding(4)
                 .width(Length::Fill),
         ]
         .align_items(Alignment::Center),
