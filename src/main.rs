@@ -44,8 +44,7 @@ fn labeled_input<'a>(
         row![
             container(text(label).size(12).style(style::YELLOW))
                 .padding(8)
-                .center_y()
-                .height(Length::Fill),
+                .center_y(),
             rule::Rule::vertical(1).style(theme::Rule::Custom(Box::new(style::VerticalSeparator))),
             text_input("", value)
                 .on_input(on_change)
@@ -53,8 +52,7 @@ fn labeled_input<'a>(
                 .padding(8)
                 .width(Length::Fill)
         ]
-        .align_items(Alignment::Center)
-        .height(Length::Fixed(32.0)),
+        .align_items(Alignment::Center),
     )
     .style(theme::Container::Custom(Box::new(style::InputGroup)))
     .width(Length::Fill)
