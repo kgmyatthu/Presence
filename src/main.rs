@@ -137,10 +137,6 @@ impl Application for App {
                 self.state.late_penalty = value;
                 Command::none()
             }
-            Message::AbsentPenaltyChanged(value) => {
-                self.state.absent_penalty = value;
-                Command::none()
-            }
             Message::ReportFormatChanged(format) => {
                 self.state.report_format = format;
                 Command::none()
@@ -253,8 +249,7 @@ impl Application for App {
                     text("Grading (Points)").size(12).style(style::BASE00),
                     row![
                         labeled_input("Total", &self.state.total_points, Message::TotalPointsChanged),
-                        labeled_input("Late Pen.", &self.state.late_penalty, Message::LatePenaltyChanged),
-                        labeled_input("Absent Pen.", &self.state.absent_penalty, Message::AbsentPenaltyChanged),
+                        labeled_input("Late Pts.", &self.state.late_penalty, Message::LatePenaltyChanged),
                     ]
                     .spacing(8)
                     .align_items(Alignment::Center)

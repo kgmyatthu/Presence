@@ -18,7 +18,6 @@ pub struct AppState {
     pub absent_minutes: String,
     pub total_points: String,
     pub late_penalty: String,
-    pub absent_penalty: String,
     pub report_format: ReportFormat,
     pub report: Option<AttendanceReport>,
     pub selected_student: Option<usize>,
@@ -36,7 +35,6 @@ impl AppState {
             absent_minutes: "30".to_string(),
             total_points: "10".to_string(),
             late_penalty: "0.5".to_string(),
-            absent_penalty: "1".to_string(),
             report_format: ReportFormat::Csv,
             report: None,
             selected_student: None,
@@ -53,7 +51,6 @@ impl AppState {
             absent_minutes: self.absent_minutes.clone(),
             total_points: self.total_points.clone(),
             late_penalty: self.late_penalty.clone(),
-            absent_penalty: self.absent_penalty.clone(),
         }
     }
 }
