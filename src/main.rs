@@ -514,6 +514,7 @@ fn labeled_input(
                 .padding(2)
                 .width(Length::Fill),
         ]
+        .height(Length::Fixed(24.0))
         .align_items(Alignment::Center),
     )
     .style(theme::Container::Custom(Box::new(style::InputGroup)))
