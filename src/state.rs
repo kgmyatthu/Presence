@@ -594,7 +594,7 @@ fn write_pdf(path: &Path, report: &AttendanceReport) -> Result<(), String> {
     doc.push(title.styled(Style::new().with_color(violet).with_font_size(20).bold()));
     doc.push(genpdf::elements::Break::new(1.0));
 
-    let mut table = genpdf::elements::TableLayout::new(vec![3, 3, 2, 2, 1, 2, 2]);
+    let mut table = genpdf::elements::TableLayout::new(vec![3, 3, 2, 2, 2, 2, 2]);
     table.set_cell_decorator(genpdf::elements::FrameCellDecorator::new(true, true, true));
 
     let header_style = Style::new().with_color(blue).bold();
