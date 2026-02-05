@@ -450,4 +450,143 @@ mod tests {
         let score = calculate_score(&record, &config);
         assert_eq!(score, 5.0);
     }
+
+    #[test]
+    fn test_split_name() {
+        assert_eq!(split_name("John Doe"), ("John".to_string(), "Doe".to_string()));
+        assert_eq!(split_name("John"), ("John".to_string(), "".to_string()));
+        assert_eq!(split_name(""), ("".to_string(), "".to_string()));
+        assert_eq!(split_name("John Von Neumann"), ("John".to_string(), "Von Neumann".to_string()));
+    }
+
+    #[test]
+    fn test_extract_id() {
+        assert_eq!(extract_id("student@univ.edu"), "student");
+        assert_eq!(extract_id("user.name+tag@gmail.com"), "user.name+tag");
+        assert_eq!(extract_id("plainstring"), "plainstring");
+        assert_eq!(extract_id(""), "");
+    }
+
+    #[test]
+    fn test_parse_config_valid() {
+        let config = AttendanceConfig {
+            class_start: "09:00".to_string(),
+            class_end: "10:30".to_string(),
+            late_minutes: "15".to_string(),
+            absent_minutes: "60".to_string(),
+            total_points: "100".to_string(),
+            late_penalty: "0.8".to_string(),
+        };
+
+        let result = parse_config(config).unwrap();
+        assert_eq!(result.class_start, NaiveTime::from_hms_opt(9, 0, 0).unwrap());
+        assert_eq!(result.late_minutes, 15);
+        assert_eq!(result.absent_minutes, 60);
+        assert_eq!(result.total_points, 100.0);
+        assert_eq!(result.late_penalty, 0.8);
+    }
+
+    #[test]
+    fn test_parse_config_invalid() {
+        let config = AttendanceConfig {
+            class_start: "invalid".to_string(),
+            class_end: "10:30".to_string(),
+            late_minutes: "15".to_string(),
+            absent_minutes: "60".to_string(),
+            total_points: "100".to_string(),
+            late_penalty: "0.8".to_string(),
+        };
+        assert!(parse_config(config.clone()).is_err());
+
+        // Test end time before start time
+        let config = AttendanceConfig {
+            class_start: "10:30".to_string(),
+            class_end: "09:00".to_string(),
+            late_minutes: "15".to_string(),
+            absent_minutes: "60".to_string(),
+            total_points: "100".to_string(),
+            late_penalty: "0.8".to_string(),
+        };
+        assert!(parse_config(config).is_err());
+    }
+
+    #[test]
+    fn test_parse_csv_participants() {
+        // Mock CSV data: Name, User Email, Join Time - Date needs quotes because it contains a comma
+        let csv_data = "Name,Email,First Join\nJohn Doe,john@example.com,\"10/25/23, 1:30:00 PM\"\nJane Smith,jane@example.com,\"10/25/23, 1:40:00 PM\"";
+        let participants = parse_participants(csv_data.as_bytes(), "csv").expect("Failed to parse CSV");
+
+        assert_eq!(participants.len(), 2);
+
+        // Sorting isn't guaranteed by hashmap, so we find by ID
+        let john = participants.iter().find(|p| p.email == "john@example.com").unwrap();
+        assert_eq!(john.name, "John");
+        assert_eq!(john.surname, "Doe");
+        // Time parsing check: 1:30 PM = 13:30
+        assert_eq!(john.first_join.time(), NaiveTime::from_hms_opt(13, 30, 0).unwrap());
+
+        let jane = participants.iter().find(|p| p.email == "jane@example.com").unwrap();
+        assert_eq!(jane.name, "Jane");
+        assert_eq!(jane.surname, "Smith");
+        assert_eq!(jane.first_join.time(), NaiveTime::from_hms_opt(13, 40, 0).unwrap());
+    }
+
+    #[test]
+    fn test_generate_report_integration() {
+        let config = AttendanceConfig {
+            class_start: "13:30".to_string(),
+            class_end: "15:00".to_string(),
+            late_minutes: "10".to_string(),
+            absent_minutes: "30".to_string(),
+            total_points: "10.0".to_string(),
+            late_penalty: "0.5".to_string(),
+        };
+
+        // Session 1: John is Normal (13:30), Jane is Late (13:41), Bob is Absent (not present)
+        let session1_csv = "Name,Email,First Join\nJohn Doe,john@example.com,\"10/25/23, 1:30:00 PM\"\nJane Smith,jane@example.com,\"10/25/23, 1:41:00 PM\"";
+
+        // Session 2: John is Absent (not present), Jane is Normal (13:35), Bob is Normal (13:30)
+        let session2_csv = "Name,Email,First Join\nJane Smith,jane@example.com,\"10/27/23, 1:35:00 PM\"\nBob Builder,bob@example.com,\"10/27/23, 1:30:00 PM\"";
+
+        let session1 = parse_participants(session1_csv.as_bytes(), "csv").unwrap();
+        let session2 = parse_participants(session2_csv.as_bytes(), "csv").unwrap();
+
+        let report = generate_report(vec![session1, session2], config).expect("Failed to generate report");
+
+        assert_eq!(report.sessions, 2);
+        assert_eq!(report.students.len(), 3);
+
+        // Verify John: 1 Normal, 0 Late, 1 Absent. Score = 1.0
+        let john = report.students.iter().find(|s| s.email == "john@example.com").unwrap();
+        assert_eq!(john.normal, 1);
+        assert_eq!(john.late, 0);
+        assert_eq!(john.absent, 1);
+        assert_eq!(john.score, 1.0);
+
+        // Verify Jane: 1 Normal, 1 Late, 0 Absent. Score = 1.0 + 0.5 = 1.5
+        let jane = report.students.iter().find(|s| s.email == "jane@example.com").unwrap();
+        assert_eq!(jane.normal, 1);
+        assert_eq!(jane.late, 1);
+        assert_eq!(jane.absent, 0);
+        assert_eq!(jane.score, 1.5);
+
+        // Verify Bob: 1 Normal, 0 Late, 1 Absent (Session 1). Score = 1.0
+        let bob = report.students.iter().find(|s| s.email == "bob@example.com").unwrap();
+        assert_eq!(bob.normal, 1);
+        assert_eq!(bob.late, 0);
+        assert_eq!(bob.absent, 1);
+        assert_eq!(bob.score, 1.0);
+    }
+
+    #[test]
+    fn test_detect_delimiter() {
+         let comma_csv = b"Name,Email,First Join\nJohn,j@e.com,Time";
+         assert_eq!(detect_delimiter(comma_csv), b',');
+
+         let tab_csv = b"Name\tEmail\tFirst Join\nJohn\tj@e.com\tTime";
+         assert_eq!(detect_delimiter(tab_csv), b'\t');
+
+         let semi_csv = b"Name;Email;First Join\nJohn;j@e.com;Time";
+         assert_eq!(detect_delimiter(semi_csv), b';');
+    }
 }

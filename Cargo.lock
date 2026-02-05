@@ -2784,6 +2784,7 @@ dependencies = [
  "iced",
  "rfd",
  "serde",
+ "tempfile",
 ]
 
 [[package]]

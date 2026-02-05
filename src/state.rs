@@ -246,3 +246,143 @@ fn padded_text(text: impl Into<String>, style: Style) -> impl Element {
         genpdf::Margins::trbl(2.0, 2.0, 2.0, 2.0),
     )
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::core::StudentRecord;
+
+    #[test]
+    fn test_app_state_defaults() {
+        let state = AppState::new();
+        assert_eq!(state.class_start, "13:30");
+        assert_eq!(state.report_format, ReportFormat::Csv);
+    }
+
+    #[test]
+    fn test_to_config() {
+        let state = AppState::new();
+        let config = state.to_config();
+        assert_eq!(config.class_start, "13:30");
+        assert_eq!(config.late_minutes, "10");
+    }
+
+    #[test]
+    fn test_load_attendance() {
+        let dir = tempfile::tempdir().unwrap();
+        let file_path = dir.path().join("session1.csv");
+        let mut file = File::create(&file_path).unwrap();
+        // Quote the date field as per CSV requirement for commas
+        writeln!(file, "Name,Email,First Join\nJohn Doe,john@example.com,\"10/25/23, 1:30:00 PM\"").unwrap();
+
+        let config = AttendanceConfig {
+            class_start: "13:30".to_string(),
+            class_end: "15:00".to_string(),
+            late_minutes: "10".to_string(),
+            absent_minutes: "30".to_string(),
+            total_points: "10.0".to_string(),
+            late_penalty: "0.5".to_string(),
+        };
+
+        // Test loading from directory
+        let report = load_attendance(dir.path().to_path_buf(), config.clone()).expect("Failed to load from dir");
+        assert_eq!(report.sessions, 1);
+        assert_eq!(report.students.len(), 1);
+
+        // Test loading from single file
+        let report_file = load_attendance(file_path, config).expect("Failed to load from file");
+        assert_eq!(report_file.sessions, 1);
+        assert_eq!(report_file.students.len(), 1);
+    }
+
+    #[test]
+    fn test_write_csv() {
+        let dir = tempfile::tempdir().unwrap();
+        let file_path = dir.path().join("output.csv");
+
+        let report = AttendanceReport {
+            students: vec![
+                StudentRecord {
+                    name: "John".to_string(),
+                    surname: "Doe".to_string(),
+                    id: "john".to_string(),
+                    email: "john@example.com".to_string(),
+                    normal: 1,
+                    late: 0,
+                    absent: 0,
+                    score: 1.0,
+                }
+            ],
+            sessions: 1,
+            total_points: 10.0,
+        };
+
+        write_csv(&file_path, &report).expect("Failed to write CSV");
+
+        let content = std::fs::read_to_string(&file_path).unwrap();
+        assert!(content.contains("Name,Surname,ID"));
+        assert!(content.contains("John,Doe,john,1,0,0,1.0/10.0"));
+    }
+
+    #[test]
+    fn test_write_text() {
+        let dir = tempfile::tempdir().unwrap();
+        let file_path = dir.path().join("output.txt");
+
+        let report = AttendanceReport {
+            students: vec![
+                StudentRecord {
+                    name: "John".to_string(),
+                    surname: "Doe".to_string(),
+                    id: "john".to_string(),
+                    email: "john@example.com".to_string(),
+                    normal: 1,
+                    late: 0,
+                    absent: 0,
+                    score: 1.0,
+                }
+            ],
+            sessions: 1,
+            total_points: 10.0,
+        };
+
+        write_text(&file_path, &report).expect("Failed to write TXT");
+
+        let content = std::fs::read_to_string(&file_path).unwrap();
+        assert!(content.contains("Name\tSurname\tID"));
+        assert!(content.contains("John\tDoe\tjohn\t1\t0\t0\t1.0/10.0"));
+    }
+
+    #[test]
+    fn test_load_attendance_errors() {
+        let config = AttendanceConfig {
+            class_start: "13:30".to_string(),
+            class_end: "15:00".to_string(),
+            late_minutes: "10".to_string(),
+            absent_minutes: "30".to_string(),
+            total_points: "10.0".to_string(),
+            late_penalty: "0.5".to_string(),
+        };
+
+        // Test non-existent directory
+        let result = load_attendance(PathBuf::from("non_existent_dir_12345"), config.clone());
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("Please select a valid directory or attendance file."));
+
+        // Test directory with no valid files
+        let dir = tempfile::tempdir().unwrap();
+        let file_path = dir.path().join("readme.txt");
+        File::create(&file_path).unwrap();
+
+        let result = load_attendance(dir.path().to_path_buf(), config.clone());
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("No attendance CSV/XLSX files found"));
+
+        // Test invalid file type selected directly
+        let file_path = dir.path().join("invalid.txt");
+        File::create(&file_path).unwrap();
+        let result = load_attendance(file_path, config.clone());
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("not a supported CSV/XLSX"));
+    }
+}
