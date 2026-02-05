@@ -202,15 +202,17 @@ impl Application for App {
                 column![
                     text("Class Time").size(12).style(style::BASE00),
                     row![
-                        text_input("Start", &self.state.class_start)
-                            .on_input(Message::ClassStartChanged)
-                            .style(theme::TextInput::Custom(Box::new(style::TextInput)))
-                            .padding(8),
+                        labeled_input(
+                            "Start",
+                            &self.state.class_start,
+                            Message::ClassStartChanged
+                        ),
                         text("-"),
-                        text_input("End", &self.state.class_end)
-                            .on_input(Message::ClassEndChanged)
-                            .style(theme::TextInput::Custom(Box::new(style::TextInput)))
-                            .padding(8),
+                        labeled_input(
+                            "End",
+                            &self.state.class_end,
+                            Message::ClassEndChanged
+                        ),
                     ]
                     .spacing(8)
                     .align_items(Alignment::Center)
@@ -223,14 +225,16 @@ impl Application for App {
                 column![
                     text("Thresholds (Min)").size(12).style(style::BASE00),
                     row![
-                        text_input("Late", &self.state.late_minutes)
-                            .on_input(Message::LateMinutesChanged)
-                            .style(theme::TextInput::Custom(Box::new(style::TextInput)))
-                            .padding(8),
-                        text_input("Absent", &self.state.absent_minutes)
-                            .on_input(Message::AbsentMinutesChanged)
-                            .style(theme::TextInput::Custom(Box::new(style::TextInput)))
-                            .padding(8),
+                        labeled_input(
+                            "Late",
+                            &self.state.late_minutes,
+                            Message::LateMinutesChanged
+                        ),
+                        labeled_input(
+                            "Absent",
+                            &self.state.absent_minutes,
+                            Message::AbsentMinutesChanged
+                        ),
                     ]
                     .spacing(8)
                 ]
@@ -238,18 +242,21 @@ impl Application for App {
                 column![
                     text("Grading (Points)").size(12).style(style::BASE00),
                     row![
-                        text_input("Total", &self.state.total_points)
-                            .on_input(Message::TotalPointsChanged)
-                            .style(theme::TextInput::Custom(Box::new(style::TextInput)))
-                            .padding(8),
-                        text_input("Late Pen.", &self.state.late_penalty)
-                            .on_input(Message::LatePenaltyChanged)
-                            .style(theme::TextInput::Custom(Box::new(style::TextInput)))
-                            .padding(8),
-                        text_input("Absent Pen.", &self.state.absent_penalty)
-                            .on_input(Message::AbsentPenaltyChanged)
-                            .style(theme::TextInput::Custom(Box::new(style::TextInput)))
-                            .padding(8),
+                        labeled_input(
+                            "Total",
+                            &self.state.total_points,
+                            Message::TotalPointsChanged
+                        ),
+                        labeled_input(
+                            "Late Pen.",
+                            &self.state.late_penalty,
+                            Message::LatePenaltyChanged
+                        ),
+                        labeled_input(
+                            "Absent Pen.",
+                            &self.state.absent_penalty,
+                            Message::AbsentPenaltyChanged
+                        ),
                     ]
                     .spacing(8)
                 ]
@@ -486,6 +493,30 @@ async fn load_attendance(
 
 async fn save_report(report: AttendanceReport, format: ReportFormat) -> Result<PathBuf, String> {
     state::save_report(report, format)
+}
+
+fn labeled_input(
+    label: &str,
+    value: &str,
+    on_change: impl Fn(String) -> Message + 'static,
+) -> Element<'static, Message> {
+    container(
+        row![
+            container(text(label).size(14).style(style::YELLOW))
+                .padding(8)
+                .align_y(Vertical::Center),
+            container(Space::new(Length::Fixed(1.0), Length::Fill))
+                .style(theme::Container::Custom(Box::new(style::VerticalSeparator))),
+            text_input("", value)
+                .on_input(on_change)
+                .style(theme::TextInput::Custom(Box::new(style::BorderlessInput)))
+                .padding(8)
+                .width(Length::Fill),
+        ]
+        .align_items(Alignment::Center),
+    )
+    .style(theme::Container::Custom(Box::new(style::InputGroup)))
+    .into()
 }
 
 struct PieChart {

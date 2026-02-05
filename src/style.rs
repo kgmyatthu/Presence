@@ -86,6 +86,34 @@ impl container::StyleSheet for BorderedPanel {
     }
 }
 
+pub struct InputGroup;
+impl container::StyleSheet for InputGroup {
+    type Style = Theme;
+    fn appearance(&self, _theme: &Theme) -> container::Appearance {
+        container::Appearance {
+            text_color: Some(BASE0),
+            background: Some(Background::Color(BASE02)),
+            border: Border {
+                color: BASE00,
+                width: 1.0,
+                radius: 0.0.into(),
+            },
+            shadow: Shadow::default(),
+        }
+    }
+}
+
+pub struct VerticalSeparator;
+impl container::StyleSheet for VerticalSeparator {
+    type Style = Theme;
+    fn appearance(&self, _theme: &Theme) -> container::Appearance {
+        container::Appearance {
+            background: Some(Background::Color(BASE00)),
+            ..container::Appearance::default()
+        }
+    }
+}
+
 // --- Text Input Styles ---
 
 pub struct TextInput;
@@ -138,6 +166,54 @@ impl text_input::StyleSheet for TextInput {
 
     fn value_color(&self, _theme: &Theme) -> Color {
         BASE1 // Brighter text value
+    }
+
+    fn disabled_color(&self, _theme: &Theme) -> Color {
+        BASE01
+    }
+
+    fn selection_color(&self, _theme: &Theme) -> Color {
+        BASE01
+    }
+}
+
+pub struct BorderlessInput;
+impl text_input::StyleSheet for BorderlessInput {
+    type Style = Theme;
+    fn active(&self, _theme: &Theme) -> text_input::Appearance {
+        text_input::Appearance {
+            background: Background::Color(Color::TRANSPARENT),
+            border: Border {
+                color: Color::TRANSPARENT,
+                width: 0.0,
+                radius: 0.0.into(),
+            },
+            icon_color: BASE0,
+        }
+    }
+
+    fn focused(&self, theme: &Theme) -> text_input::Appearance {
+        self.active(theme)
+    }
+
+    fn hovered(&self, theme: &Theme) -> text_input::Appearance {
+        self.active(theme)
+    }
+
+    fn disabled(&self, theme: &Theme) -> text_input::Appearance {
+        text_input::Appearance {
+            background: Background::Color(Color::TRANSPARENT),
+            icon_color: BASE01,
+            ..self.active(theme)
+        }
+    }
+
+    fn placeholder_color(&self, _theme: &Theme) -> Color {
+        BASE01
+    }
+
+    fn value_color(&self, _theme: &Theme) -> Color {
+        BASE1
     }
 
     fn disabled_color(&self, _theme: &Theme) -> Color {
