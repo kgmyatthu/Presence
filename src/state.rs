@@ -663,7 +663,8 @@ fn add_soft_breaks(text: &str) -> String {
             for (i, c) in word.chars().enumerate() {
                 result.push(c);
                 if i > 0 && i % 4 == 0 && i != char_count - 1 {
-                    result.push('\u{200B}');
+                    result.push('-');
+                    result.push(' ');
                 }
             }
         } else {
