@@ -15,7 +15,6 @@ pub enum Message {
     AbsentMinutesChanged(String),
     TotalPointsChanged(String),
     LatePenaltyChanged(String),
-    AbsentPenaltyChanged(String),
     ReportFormatChanged(ReportFormat),
     RunAnalysis,
     AnalysisDone(Result<AttendanceReport, String>),

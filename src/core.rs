@@ -14,7 +14,6 @@ pub struct AttendanceConfig {
     pub absent_minutes: String,
     pub total_points: String,
     pub late_penalty: String,
-    pub absent_penalty: String,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -81,7 +80,6 @@ pub struct ConfigValues {
     pub absent_minutes: i64,
     pub total_points: f32,
     pub late_penalty: f32,
-    pub absent_penalty: f32,
 }
 
 pub fn parse_config(config: AttendanceConfig) -> Result<ConfigValues, String> {
@@ -102,14 +100,12 @@ pub fn parse_config(config: AttendanceConfig) -> Result<ConfigValues, String> {
         .map_err(|_| "Absent minutes must be a number.".to_string())?;
     let total_points = parse_float(&config.total_points, "Total points")?;
     let late_penalty = parse_float(&config.late_penalty, "Late penalty")?;
-    let absent_penalty = parse_float(&config.absent_penalty, "Absent penalty")?;
     Ok(ConfigValues {
         class_start,
         late_minutes,
         absent_minutes,
         total_points,
         late_penalty,
-        absent_penalty,
     })
 }
 
@@ -421,8 +417,37 @@ fn apply_status(record: &mut StudentRecord, status: AttendanceStatus) {
 }
 
 fn calculate_score(record: &StudentRecord, config: &ConfigValues) -> f32 {
-    let deductions =
-        (record.late as f32 * config.late_penalty) + (record.absent as f32 * config.absent_penalty);
-    let score = config.total_points - deductions;
-    score.max(0.0)
+    let score = (record.normal as f32) + (record.late as f32 * config.late_penalty);
+    score.min(config.total_points).max(0.0)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_calculate_score_accumulation() {
+        let config = ConfigValues {
+            class_start: NaiveTime::from_hms_opt(13, 30, 0).unwrap(),
+            late_minutes: 10,
+            absent_minutes: 30,
+            total_points: 10.0,
+            late_penalty: 0.5,
+        };
+
+        let record = StudentRecord {
+            name: "Test".to_string(),
+            surname: "User".to_string(),
+            id: "123".to_string(),
+            email: "test@example.com".to_string(),
+            normal: 3,
+            late: 4,
+            absent: 2,
+            score: 0.0,
+        };
+
+        // User example: 4 late * 0.5 + 3 normal * 1.0 = 2.0 + 3.0 = 5.0
+        let score = calculate_score(&record, &config);
+        assert_eq!(score, 5.0);
+    }
 }
