@@ -27,7 +27,7 @@ fn main() -> iced::Result {
     App::run(Settings {
         antialiasing: true,
         window: iced::window::Settings {
-            min_size: Some(Size::new(900.0, 700.0)),
+            min_size: Some(Size::new(900.0, 900.0)),
             ..iced::window::Settings::default()
         },
         default_font: Font::MONOSPACE,
@@ -42,7 +42,7 @@ fn labeled_input<'a>(
 ) -> Element<'a, Message> {
     container(
         column![
-            text(label).size(10).style(style::YELLOW),
+            text(label).size(14).style(style::YELLOW),
             text_input("", value)
                 .on_input(on_change)
                 .style(theme::TextInput::Custom(Box::new(style::BorderlessInput)))
