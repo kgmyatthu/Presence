@@ -8,7 +8,7 @@ use iced::alignment::{Horizontal, Vertical};
 use iced::mouse;
 use iced::widget::canvas::{self, Canvas};
 use iced::widget::{
-    Column, Space, button, column, container, pick_list, row, rule, scrollable, text, text_input,
+    Column, Space, button, column, container, pick_list, row, scrollable, text, text_input,
 };
 use iced::{
     Alignment, Application, Color, Command, Element, Font, Length, Pixels, Point, Radians, Rectangle,
@@ -33,32 +33,6 @@ fn main() -> iced::Result {
         default_font: Font::MONOSPACE,
         ..Settings::default()
     })
-}
-
-fn labeled_input<'a>(
-    label: &'a str,
-    value: &'a str,
-    on_change: fn(String) -> Message,
-) -> Element<'a, Message> {
-    container(
-        row![
-            container(text(label).size(12).style(style::YELLOW))
-                .padding(8)
-                .center_y()
-                .height(Length::Fill),
-            rule::Rule::vertical(1).style(theme::Rule::Custom(Box::new(style::VerticalSeparator))),
-            text_input("", value)
-                .on_input(on_change)
-                .style(theme::TextInput::Custom(Box::new(style::BorderlessInput)))
-                .padding(8)
-                .width(Length::Fill)
-        ]
-        .align_items(Alignment::Center)
-        .height(Length::Fixed(32.0)),
-    )
-    .style(theme::Container::Custom(Box::new(style::InputGroup)))
-    .width(Length::Fill)
-    .into()
 }
 
 struct App {
@@ -228,8 +202,15 @@ impl Application for App {
                 column![
                     text("Class Time").size(12).style(style::BASE00),
                     row![
-                        labeled_input("Start", &self.state.class_start, Message::ClassStartChanged),
-                        labeled_input("End", &self.state.class_end, Message::ClassEndChanged),
+                        text_input("Start", &self.state.class_start)
+                            .on_input(Message::ClassStartChanged)
+                            .style(theme::TextInput::Custom(Box::new(style::TextInput)))
+                            .padding(8),
+                        text("-"),
+                        text_input("End", &self.state.class_end)
+                            .on_input(Message::ClassEndChanged)
+                            .style(theme::TextInput::Custom(Box::new(style::TextInput)))
+                            .padding(8),
                     ]
                     .spacing(8)
                     .align_items(Alignment::Center)
@@ -242,25 +223,36 @@ impl Application for App {
                 column![
                     text("Thresholds (Min)").size(12).style(style::BASE00),
                     row![
-                        labeled_input("Late", &self.state.late_minutes, Message::LateMinutesChanged),
-                        labeled_input("Absent", &self.state.absent_minutes, Message::AbsentMinutesChanged),
+                        text_input("Late", &self.state.late_minutes)
+                            .on_input(Message::LateMinutesChanged)
+                            .style(theme::TextInput::Custom(Box::new(style::TextInput)))
+                            .padding(8),
+                        text_input("Absent", &self.state.absent_minutes)
+                            .on_input(Message::AbsentMinutesChanged)
+                            .style(theme::TextInput::Custom(Box::new(style::TextInput)))
+                            .padding(8),
                     ]
                     .spacing(8)
-                    .align_items(Alignment::Center)
                 ]
-                .width(Length::Fill)
                 .spacing(4),
                 column![
                     text("Grading (Points)").size(12).style(style::BASE00),
                     row![
-                        labeled_input("Total", &self.state.total_points, Message::TotalPointsChanged),
-                        labeled_input("Late Pen.", &self.state.late_penalty, Message::LatePenaltyChanged),
-                        labeled_input("Absent Pen.", &self.state.absent_penalty, Message::AbsentPenaltyChanged),
+                        text_input("Total", &self.state.total_points)
+                            .on_input(Message::TotalPointsChanged)
+                            .style(theme::TextInput::Custom(Box::new(style::TextInput)))
+                            .padding(8),
+                        text_input("Late Pen.", &self.state.late_penalty)
+                            .on_input(Message::LatePenaltyChanged)
+                            .style(theme::TextInput::Custom(Box::new(style::TextInput)))
+                            .padding(8),
+                        text_input("Absent Pen.", &self.state.absent_penalty)
+                            .on_input(Message::AbsentPenaltyChanged)
+                            .style(theme::TextInput::Custom(Box::new(style::TextInput)))
+                            .padding(8),
                     ]
                     .spacing(8)
-                    .align_items(Alignment::Center)
                 ]
-                .width(Length::Fill)
                 .spacing(4),
                 column![
                     text("Actions").size(12).style(style::BASE00),
@@ -284,7 +276,6 @@ impl Application for App {
                             .padding(8),
                     ]
                     .spacing(8)
-                    .align_items(Alignment::Center)
                 ]
                 .spacing(4)
             ]
