@@ -426,3 +426,40 @@ fn calculate_score(record: &StudentRecord, config: &ConfigValues) -> f32 {
     let score = config.total_points - deductions;
     score.max(0.0)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_ehsan_calculation() {
+        // Spec: Ehsan – Ali – 661789 – 7, 2, 1, 8/10
+        // Normal: 7, Late: 2, Absent: 1
+        // Score: 8 out of 10
+
+        let record = StudentRecord {
+            name: "Ehsan".to_string(),
+            surname: "Ali".to_string(),
+            id: "661789".to_string(),
+            email: "ehsan@example.com".to_string(),
+            normal: 7,
+            late: 2,
+            absent: 1,
+            score: 0.0, // Calculated below
+        };
+
+        let config = ConfigValues {
+            class_start: NaiveTime::from_hms_opt(13, 30, 0).unwrap(),
+            late_minutes: 10,
+            absent_minutes: 30,
+            total_points: 10.0,
+            late_penalty: 0.5,
+            absent_penalty: 1.0,
+        };
+
+        let score = calculate_score(&record, &config);
+
+        // Calculation: 10 - (2 * 0.5) - (1 * 1.0) = 10 - 1 - 1 = 8
+        assert_eq!(score, 8.0);
+    }
+}
