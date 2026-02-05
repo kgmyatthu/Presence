@@ -615,8 +615,8 @@ fn write_pdf(path: &Path, report: &AttendanceReport) -> Result<(), String> {
         let row_style = Style::new().with_color(color);
         table
             .row()
-            .element(padded_text(student.name.clone(), row_style))
-            .element(padded_text(student.surname.clone(), row_style))
+            .element(padded_text(add_soft_breaks(&student.name), row_style))
+            .element(padded_text(add_soft_breaks(&student.surname), row_style))
             .element(padded_text(student.id.clone(), row_style))
             .element(padded_text(student.normal.to_string(), row_style))
             .element(padded_text(student.late.to_string(), row_style))
@@ -653,4 +653,22 @@ fn cell_to_string(cell: &Data) -> String {
         Data::Error(error) => format!("{error:?}"),
         Data::Empty => String::new(),
     }
+}
+
+fn add_soft_breaks(text: &str) -> String {
+    let mut result = String::with_capacity(text.len() + text.len() / 4);
+    for word in text.split_inclusive(char::is_whitespace) {
+        let char_count = word.chars().count();
+        if char_count > 10 {
+            for (i, c) in word.chars().enumerate() {
+                result.push(c);
+                if i > 0 && i % 4 == 0 && i != char_count - 1 {
+                    result.push('\u{200B}');
+                }
+            }
+        } else {
+            result.push_str(word);
+        }
+    }
+    result
 }
