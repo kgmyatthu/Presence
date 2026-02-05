@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use crate::state::{AttendanceReport, ReportFormat};
+use crate::core::{AttendanceReport, ReportFormat};
 
 #[derive(Debug, Clone)]
 pub enum Message {

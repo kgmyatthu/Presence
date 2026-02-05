@@ -1,3 +1,4 @@
+mod core;
 mod messages;
 mod state;
 mod style;
@@ -15,7 +16,8 @@ use iced::{
     Renderer, Settings, Size, Theme, executor, theme,
 };
 use messages::Message;
-use state::{AppState, AttendanceReport, ReportFormat, StudentRecord};
+use state::AppState;
+use core::{AttendanceReport, ReportFormat, StudentRecord};
 
 const NAME_COLUMN_WIDTH: f32 = 150.0;
 const SURNAME_COLUMN_WIDTH: f32 = 150.0;
@@ -485,7 +487,7 @@ async fn pick_file() -> Option<PathBuf> {
 
 async fn load_attendance(
     directory: PathBuf,
-    config: state::AttendanceConfig,
+    config: core::AttendanceConfig,
 ) -> Result<AttendanceReport, String> {
     state::load_attendance(directory, config)
 }
