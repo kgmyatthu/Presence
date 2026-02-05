@@ -8,7 +8,7 @@ use iced::alignment::{Horizontal, Vertical};
 use iced::mouse;
 use iced::widget::canvas::{self, Canvas};
 use iced::widget::{
-    Column, Space, button, column, container, pick_list, row, rule, scrollable, text, text_input,
+    Column, Space, button, column, container, pick_list, row, scrollable, text, text_input,
 };
 use iced::{
     Alignment, Application, Color, Command, Element, Font, Length, Pixels, Point, Radians, Rectangle,
@@ -41,20 +41,17 @@ fn labeled_input<'a>(
     on_change: fn(String) -> Message,
 ) -> Element<'a, Message> {
     container(
-        row![
-            container(text(label).size(12).style(style::YELLOW))
-                .padding(8)
-                .center_y()
-                .height(Length::Fill),
-            rule::Rule::vertical(1).style(theme::Rule::Custom(Box::new(style::VerticalSeparator))),
+        column![
+            text(label).size(10).style(style::YELLOW),
             text_input("", value)
                 .on_input(on_change)
                 .style(theme::TextInput::Custom(Box::new(style::BorderlessInput)))
-                .padding(8)
+                .padding(0)
+                .size(14)
                 .width(Length::Fill)
         ]
-        .align_items(Alignment::Center)
-        .height(Length::Fixed(32.0)),
+        .spacing(2)
+        .padding(6),
     )
     .style(theme::Container::Custom(Box::new(style::InputGroup)))
     .width(Length::Fill)

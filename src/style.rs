@@ -1,5 +1,5 @@
 use iced::overlay::menu;
-use iced::widget::{button, container, pick_list, rule, scrollable, text_input};
+use iced::widget::{button, container, pick_list, scrollable, text_input};
 use iced::{Background, Border, Color, Shadow, Theme, Vector};
 
 // Aggressive Solarized Dark Palette
@@ -103,18 +103,6 @@ impl container::StyleSheet for InputGroup {
     }
 }
 
-pub struct VerticalSeparator;
-impl rule::StyleSheet for VerticalSeparator {
-    type Style = Theme;
-    fn appearance(&self, _theme: &Theme) -> rule::Appearance {
-        rule::Appearance {
-            color: BASE00,
-            width: 1,
-            radius: 0.0.into(),
-            fill_mode: rule::FillMode::Full,
-        }
-    }
-}
 
 pub struct MainBg;
 impl container::StyleSheet for MainBg {
