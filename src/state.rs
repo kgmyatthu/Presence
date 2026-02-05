@@ -3,6 +3,8 @@ use std::fs::File;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 
+use genpdf::{style::{Color, Style}, Element};
+use genpdf::elements::PaddedElement;
 use calamine::{Data, Reader, Xlsx};
 use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
 use csv::StringRecord;
@@ -581,33 +583,48 @@ fn write_pdf(path: &Path, report: &AttendanceReport) -> Result<(), String> {
     };
     let mut doc = genpdf::Document::new(font_family);
     doc.set_title("Attendance Report");
-    doc.push(genpdf::elements::Paragraph::new("Attendance Report"));
-    let mut table = genpdf::elements::TableLayout::new(vec![1, 1, 1, 1, 1, 1, 1]);
-    table.set_cell_decorator(genpdf::elements::FrameCellDecorator::new(true, true, false));
+
+    let blue = Color::Rgb(38, 139, 210);
+    let violet = Color::Rgb(108, 113, 196);
+    let base01 = Color::Rgb(88, 110, 117);
+    let base00 = Color::Rgb(101, 123, 131);
+
+    let mut title = genpdf::elements::Paragraph::new("Attendance Report");
+    title.set_alignment(genpdf::Alignment::Center);
+    doc.push(title.styled(Style::new().with_color(violet).with_font_size(20).bold()));
+    doc.push(genpdf::elements::Break::new(1.0));
+
+    let mut table = genpdf::elements::TableLayout::new(vec![3, 3, 2, 2, 2, 2, 2]);
+    table.set_cell_decorator(genpdf::elements::FrameCellDecorator::new(true, true, true));
+
+    let header_style = Style::new().with_color(blue).bold();
+
     table
         .row()
-        .element(genpdf::elements::Paragraph::new("Name"))
-        .element(genpdf::elements::Paragraph::new("Surname"))
-        .element(genpdf::elements::Paragraph::new("ID"))
-        .element(genpdf::elements::Paragraph::new("Normal"))
-        .element(genpdf::elements::Paragraph::new("Late"))
-        .element(genpdf::elements::Paragraph::new("Absent"))
-        .element(genpdf::elements::Paragraph::new("Score"))
+        .element(padded_text("Name", header_style))
+        .element(padded_text("Surname", header_style))
+        .element(padded_text("ID", header_style))
+        .element(padded_text("Normal", header_style))
+        .element(padded_text("Late", header_style))
+        .element(padded_text("Absent", header_style))
+        .element(padded_text("Score", header_style))
         .push()
         .map_err(|error| format!("Failed to write PDF header: {error}"))?;
-    for student in &report.students {
+    for (i, student) in report.students.iter().enumerate() {
+        let color = if i % 2 == 0 { base01 } else { base00 };
+        let row_style = Style::new().with_color(color);
         table
             .row()
-            .element(genpdf::elements::Paragraph::new(&student.name))
-            .element(genpdf::elements::Paragraph::new(&student.surname))
-            .element(genpdf::elements::Paragraph::new(&student.id))
-            .element(genpdf::elements::Paragraph::new(student.normal.to_string()))
-            .element(genpdf::elements::Paragraph::new(student.late.to_string()))
-            .element(genpdf::elements::Paragraph::new(student.absent.to_string()))
-            .element(genpdf::elements::Paragraph::new(format!(
+            .element(padded_text(student.name.clone(), row_style))
+            .element(padded_text(student.surname.clone(), row_style))
+            .element(padded_text(student.id.clone(), row_style))
+            .element(padded_text(student.normal.to_string(), row_style))
+            .element(padded_text(student.late.to_string(), row_style))
+            .element(padded_text(student.absent.to_string(), row_style))
+            .element(padded_text(format!(
                 "{:.1}/{:.1}",
                 student.score, report.total_points
-            )))
+            ), row_style))
             .push()
             .map_err(|error| format!("Failed to write PDF row: {error}"))?;
     }
@@ -615,6 +632,13 @@ fn write_pdf(path: &Path, report: &AttendanceReport) -> Result<(), String> {
     doc.render_to_file(&final_path)
         .map_err(|error| format!("Failed to write PDF: {error}"))?;
     Ok(())
+}
+
+fn padded_text(text: impl Into<String>, style: Style) -> impl Element {
+    PaddedElement::new(
+        genpdf::elements::Paragraph::new(text.into()).styled(style),
+        genpdf::Margins::trbl(2.0, 2.0, 2.0, 2.0),
+    )
 }
 
 fn cell_to_string(cell: &Data) -> String {
