@@ -502,15 +502,16 @@ fn labeled_input(
 ) -> Element<'static, Message> {
     container(
         row![
-            container(text(label).size(14).style(style::YELLOW))
-                .padding(4)
+            container(text(label).size(12).style(style::YELLOW))
+                .padding(2)
                 .align_y(Vertical::Center),
             container(Space::new(Length::Fixed(1.0), Length::Fill))
                 .style(theme::Container::Custom(Box::new(style::VerticalSeparator))),
             text_input("", value)
                 .on_input(on_change)
                 .style(theme::TextInput::Custom(Box::new(style::BorderlessInput)))
-                .padding(4)
+                .size(12)
+                .padding(2)
                 .width(Length::Fill),
         ]
         .align_items(Alignment::Center),
