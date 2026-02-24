@@ -19,15 +19,19 @@ jobs:
           - os: ubuntu-latest
             artifact_name: presence
             asset_name: presence-linux-x86_64
+            installer_name: ""
           - os: windows-latest
             artifact_name: presence.exe
             asset_name: presence-windows-x86_64.exe
+            installer_name: presence-setup-windows-x86_64.exe
           - os: macos-13
             artifact_name: presence
             asset_name: presence-macos-x86_64
+            installer_name: presence-installer-macos-x86_64.dmg
           - os: macos-latest
             artifact_name: presence
             asset_name: presence-macos-aarch64
+            installer_name: presence-installer-macos-aarch64.dmg
 
     steps:
       - name: Checkout code
@@ -50,14 +54,70 @@ jobs:
       - name: Build release binary
         run: cargo build --release --verbose
 
+      # Windows Installer Steps
+      - name: Install ImageMagick (Windows)
+        if: matrix.os == 'windows-latest'
+        run: choco install imagemagick --no-progress
+
+      - name: Create Windows Installer
+        if: matrix.os == 'windows-latest'
+        shell: cmd
+        run: |
+          magick convert resources/icon.png resources/icon.ico
+          iscc resources/windows/installer.iss /DMyAppVersion="${{ github.ref_name }}"
+          move "target\release\presence_setup.exe" "target\release\${{ matrix.installer_name }}"
+
+      # macOS Installer Steps
+      - name: Create macOS Installer
+        if: startsWith(matrix.os, 'macos')
+        run: |
+          # Generate ICNS
+          mkdir icon.iconset
+          sips -z 16 16 resources/icon.png --out icon.iconset/icon_16x16.png
+          sips -z 32 32 resources/icon.png --out icon.iconset/icon_32x32.png
+          sips -z 128 128 resources/icon.png --out icon.iconset/icon_128x128.png
+          sips -z 256 256 resources/icon.png --out icon.iconset/icon_256x256.png
+          sips -z 512 512 resources/icon.png --out icon.iconset/icon_512x512.png
+          iconutil -c icns icon.iconset -o resources/icon.icns
+
+          # Create App Bundle
+          mkdir -p Presence.app/Contents/MacOS
+          mkdir -p Presence.app/Contents/Resources
+          cp target/release/presence Presence.app/Contents/MacOS/
+          cp resources/icon.icns Presence.app/Contents/Resources/
+
+          # Process Info.plist (Strip 'v' prefix from version)
+          VERSION=${{ github.ref_name }}
+          VERSION=${VERSION#v}
+          sed "s/__VERSION__/$VERSION/g" resources/macos/Info.plist.template > Presence.app/Contents/Info.plist
+          chmod +x Presence.app/Contents/MacOS/presence
+
+          # Create DMG
+          hdiutil create -volname "Presence" -srcfolder "Presence.app" -ov -format UDZO "presence.dmg"
+          mv presence.dmg target/release/${{ matrix.installer_name }}
+
       - name: Rename binary
         shell: bash
         run: mv target/release/${{ matrix.artifact_name }} target/release/${{ matrix.asset_name }}
+
+      - name: Define Release Files
+        id: release_files
+        shell: bash
+        run: |
+          FILES="target/release/${{ matrix.asset_name }}"
+          if [ -n "${{ matrix.installer_name }}" ]; then
+            FILES="${FILES}"$'\n'"target/release/${{ matrix.installer_name }}"
+          fi
+          # Escape newlines for GHA output
+          EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
+          echo "files<<$EOF" >> $GITHUB_OUTPUT
+          echo "$FILES" >> $GITHUB_OUTPUT
+          echo "$EOF" >> $GITHUB_OUTPUT
 
       - name: Upload binaries to release
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
-          files: target/release/${{ matrix.asset_name }}
+          files: ${{ steps.release_files.outputs.files }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
