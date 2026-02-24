@@ -10,14 +10,18 @@ pub const BASE01: Color = Color::from_rgb(0.345, 0.431, 0.459); // #586e75 - Com
 pub const BASE00: Color = Color::from_rgb(0.46, 0.55, 0.58); // #758b93 - Content
 pub const BASE0: Color = Color::from_rgb(0.67, 0.74, 0.73); // #aabcb9 - Body Text
 pub const BASE1: Color = Color::from_rgb(0.8, 0.85, 0.85); // #cceaea - Emphasized Content
+#[allow(dead_code)]
 pub const BASE2: Color = Color::from_rgb(0.933, 0.91, 0.835); // #eee8d5
 pub const BASE3: Color = Color::from_rgb(0.992, 0.965, 0.89); // #fdf6e3
 
 // Neon / Vibrant Accents
 pub const YELLOW: Color = Color::from_rgb(0.94, 0.78, 0.0); // #f0c600
+#[allow(dead_code)]
 pub const ORANGE: Color = Color::from_rgb(1.0, 0.37, 0.0); // #ff5f00
 pub const RED: Color = Color::from_rgb(1.0, 0.2, 0.2); // #ff3333
+#[allow(dead_code)]
 pub const MAGENTA: Color = Color::from_rgb(1.0, 0.2, 0.8); // #ff33cc
+#[allow(dead_code)]
 pub const VIOLET: Color = Color::from_rgb(0.53, 0.53, 1.0); // #8888ff
 pub const BLUE: Color = Color::from_rgb(0.0, 0.53, 1.0); // #0088ff
 pub const CYAN: Color = Color::from_rgb(0.0, 1.0, 0.8); // #00ffcc

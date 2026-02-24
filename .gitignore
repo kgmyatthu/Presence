@@ -24,3 +24,11 @@ target
 # Added by cargo
 
 /target
+
+# Installer artifacts
+resources/icon.ico
+resources/icon.icns
+icon.iconset
+Presence.app
+presence.dmg
+presence_setup.exe
