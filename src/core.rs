@@ -1,10 +1,10 @@
-use std::collections::{HashMap, HashSet};
-use std::io::Cursor;
 use calamine::{Data, Reader, Xlsx};
 use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
 use csv::StringRecord;
-use encoding_rs::{UTF_16BE, UTF_16LE, UTF_8, WINDOWS_1252};
+use encoding_rs::{UTF_8, UTF_16BE, UTF_16LE, WINDOWS_1252};
 use serde::Serialize;
+use std::collections::{HashMap, HashSet};
+use std::io::Cursor;
 
 #[derive(Debug, Clone)]
 pub struct AttendanceConfig {
@@ -201,8 +201,8 @@ fn detect_delimiter(bytes: &[u8]) -> u8 {
 
 fn parse_excel_participants(data: &[u8]) -> Result<Vec<Participant>, String> {
     let cursor = Cursor::new(data);
-    let mut workbook: Xlsx<_> = Xlsx::new(cursor)
-        .map_err(|error| format!("Failed to open Excel data: {error}"))?;
+    let mut workbook: Xlsx<_> =
+        Xlsx::new(cursor).map_err(|error| format!("Failed to open Excel data: {error}"))?;
     let sheet_name = workbook
         .sheet_names()
         .first()

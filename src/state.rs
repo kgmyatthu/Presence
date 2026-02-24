@@ -2,12 +2,13 @@ use std::fs::File;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 
-use genpdf::{style::{Color, Style}, Element};
 use genpdf::elements::PaddedElement;
-
-use crate::core::{
-    self, AttendanceConfig, AttendanceReport, ReportFormat, Participant
+use genpdf::{
+    Element,
+    style::{Color, Style},
 };
+
+use crate::core::{self, AttendanceConfig, AttendanceReport, Participant, ReportFormat};
 
 #[derive(Debug, Clone)]
 pub struct AppState {
@@ -227,10 +228,10 @@ fn write_pdf(path: &Path, report: &AttendanceReport) -> Result<(), String> {
             .element(padded_text(student.normal.to_string(), row_style))
             .element(padded_text(student.late.to_string(), row_style))
             .element(padded_text(student.absent.to_string(), row_style))
-            .element(padded_text(format!(
-                "{:.1}/{:.1}",
-                student.score, report.total_points
-            ), row_style))
+            .element(padded_text(
+                format!("{:.1}/{:.1}", student.score, report.total_points),
+                row_style,
+            ))
             .push()
             .map_err(|error| format!("Failed to write PDF row: {error}"))?;
     }
