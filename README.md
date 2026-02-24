@@ -55,13 +55,7 @@ On macOS, the build process relies on the Xcode Command Line Tools, which are ty
 
 ### Windows
 
-On Windows, Rust requires the **C++ Build Tools** from Visual Studio.
-
-1.  **Install C++ Build Tools**:
-    *   Download and install the [Visual Studio Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/).
-    *   Ensure the "Desktop development with C++" workload is selected during installation.
-
-2.  **Run the Application**:
+1.  **Run the Application**:
     Open a terminal (PowerShell or Command Prompt), navigate to the project directory, and run:
     ```bash
     cargo run --release
