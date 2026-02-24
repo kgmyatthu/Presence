@@ -5,6 +5,7 @@ mod style;
 
 use std::path::PathBuf;
 
+use core::{AttendanceReport, ReportFormat, StudentRecord};
 use iced::alignment::{Horizontal, Vertical};
 use iced::mouse;
 use iced::widget::canvas::{self, Canvas};
@@ -12,12 +13,11 @@ use iced::widget::{
     Column, Space, button, column, container, pick_list, row, scrollable, text, text_input,
 };
 use iced::{
-    Alignment, Application, Color, Command, Element, Font, Length, Pixels, Point, Radians, Rectangle,
-    Renderer, Settings, Size, Theme, executor, theme,
+    Alignment, Application, Color, Command, Element, Font, Length, Pixels, Point, Radians,
+    Rectangle, Renderer, Settings, Size, Theme, executor, theme,
 };
 use messages::Message;
 use state::AppState;
-use core::{AttendanceReport, ReportFormat, StudentRecord};
 
 const NAME_COLUMN_WIDTH: f32 = 150.0;
 const SURNAME_COLUMN_WIDTH: f32 = 150.0;
@@ -237,8 +237,16 @@ impl Application for App {
                 column![
                     text("Thresholds (Min)").size(12).style(style::BASE00),
                     row![
-                        labeled_input("Late", &self.state.late_minutes, Message::LateMinutesChanged),
-                        labeled_input("Absent", &self.state.absent_minutes, Message::AbsentMinutesChanged),
+                        labeled_input(
+                            "Late",
+                            &self.state.late_minutes,
+                            Message::LateMinutesChanged
+                        ),
+                        labeled_input(
+                            "Absent",
+                            &self.state.absent_minutes,
+                            Message::AbsentMinutesChanged
+                        ),
                     ]
                     .spacing(8)
                     .align_items(Alignment::Center)
@@ -248,8 +256,16 @@ impl Application for App {
                 column![
                     text("Grading (Points)").size(12).style(style::BASE00),
                     row![
-                        labeled_input("Total", &self.state.total_points, Message::TotalPointsChanged),
-                        labeled_input("Late Pts.", &self.state.late_penalty, Message::LatePenaltyChanged),
+                        labeled_input(
+                            "Total",
+                            &self.state.total_points,
+                            Message::TotalPointsChanged
+                        ),
+                        labeled_input(
+                            "Late Pts.",
+                            &self.state.late_penalty,
+                            Message::LatePenaltyChanged
+                        ),
                     ]
                     .spacing(8)
                     .align_items(Alignment::Center)
@@ -417,13 +433,17 @@ fn student_detail_view(
         .align_items(Alignment::Center);
 
         let table = column![
-            container(header_row).style(theme::Container::Custom(Box::new(style::BorderedPanel))).padding(4),
+            container(header_row)
+                .style(theme::Container::Custom(Box::new(style::BorderedPanel)))
+                .padding(4),
             container(table_row).padding(4)
         ]
         .spacing(8);
 
         let table_scrollable = scrollable(container(table).width(Length::Shrink))
-            .direction(scrollable::Direction::Horizontal(scrollable::Properties::new()))
+            .direction(scrollable::Direction::Horizontal(
+                scrollable::Properties::new(),
+            ))
             .style(theme::Scrollable::Custom(Box::new(style::Scrollable)));
 
         let pie = Canvas::new(PieChart::new(student))

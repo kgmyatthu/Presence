@@ -1,10 +1,10 @@
-use std::collections::{HashMap, HashSet};
-use std::io::Cursor;
 use calamine::{Data, Reader, Xlsx};
 use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
 use csv::StringRecord;
-use encoding_rs::{UTF_16BE, UTF_16LE, UTF_8, WINDOWS_1252};
+use encoding_rs::{UTF_8, UTF_16BE, UTF_16LE, WINDOWS_1252};
 use serde::Serialize;
+use std::collections::{HashMap, HashSet};
+use std::io::Cursor;
 
 #[derive(Debug, Clone)]
 pub struct AttendanceConfig {
@@ -201,8 +201,8 @@ fn detect_delimiter(bytes: &[u8]) -> u8 {
 
 fn parse_excel_participants(data: &[u8]) -> Result<Vec<Participant>, String> {
     let cursor = Cursor::new(data);
-    let mut workbook: Xlsx<_> = Xlsx::new(cursor)
-        .map_err(|error| format!("Failed to open Excel data: {error}"))?;
+    let mut workbook: Xlsx<_> =
+        Xlsx::new(cursor).map_err(|error| format!("Failed to open Excel data: {error}"))?;
     let sheet_name = workbook
         .sheet_names()
         .first()
@@ -453,10 +453,16 @@ mod tests {
 
     #[test]
     fn test_split_name() {
-        assert_eq!(split_name("John Doe"), ("John".to_string(), "Doe".to_string()));
+        assert_eq!(
+            split_name("John Doe"),
+            ("John".to_string(), "Doe".to_string())
+        );
         assert_eq!(split_name("John"), ("John".to_string(), "".to_string()));
         assert_eq!(split_name(""), ("".to_string(), "".to_string()));
-        assert_eq!(split_name("John Von Neumann"), ("John".to_string(), "Von Neumann".to_string()));
+        assert_eq!(
+            split_name("John Von Neumann"),
+            ("John".to_string(), "Von Neumann".to_string())
+        );
     }
 
     #[test]
@@ -479,7 +485,10 @@ mod tests {
         };
 
         let result = parse_config(config).unwrap();
-        assert_eq!(result.class_start, NaiveTime::from_hms_opt(9, 0, 0).unwrap());
+        assert_eq!(
+            result.class_start,
+            NaiveTime::from_hms_opt(9, 0, 0).unwrap()
+        );
         assert_eq!(result.late_minutes, 15);
         assert_eq!(result.absent_minutes, 60);
         assert_eq!(result.total_points, 100.0);
@@ -514,21 +523,34 @@ mod tests {
     fn test_parse_csv_participants() {
         // Mock CSV data: Name, User Email, Join Time - Date needs quotes because it contains a comma
         let csv_data = "Name,Email,First Join\nJohn Doe,john@example.com,\"10/25/23, 1:30:00 PM\"\nJane Smith,jane@example.com,\"10/25/23, 1:40:00 PM\"";
-        let participants = parse_participants(csv_data.as_bytes(), "csv").expect("Failed to parse CSV");
+        let participants =
+            parse_participants(csv_data.as_bytes(), "csv").expect("Failed to parse CSV");
 
         assert_eq!(participants.len(), 2);
 
         // Sorting isn't guaranteed by hashmap, so we find by ID
-        let john = participants.iter().find(|p| p.email == "john@example.com").unwrap();
+        let john = participants
+            .iter()
+            .find(|p| p.email == "john@example.com")
+            .unwrap();
         assert_eq!(john.name, "John");
         assert_eq!(john.surname, "Doe");
         // Time parsing check: 1:30 PM = 13:30
-        assert_eq!(john.first_join.time(), NaiveTime::from_hms_opt(13, 30, 0).unwrap());
+        assert_eq!(
+            john.first_join.time(),
+            NaiveTime::from_hms_opt(13, 30, 0).unwrap()
+        );
 
-        let jane = participants.iter().find(|p| p.email == "jane@example.com").unwrap();
+        let jane = participants
+            .iter()
+            .find(|p| p.email == "jane@example.com")
+            .unwrap();
         assert_eq!(jane.name, "Jane");
         assert_eq!(jane.surname, "Smith");
-        assert_eq!(jane.first_join.time(), NaiveTime::from_hms_opt(13, 40, 0).unwrap());
+        assert_eq!(
+            jane.first_join.time(),
+            NaiveTime::from_hms_opt(13, 40, 0).unwrap()
+        );
     }
 
     #[test]
@@ -551,27 +573,40 @@ mod tests {
         let session1 = parse_participants(session1_csv.as_bytes(), "csv").unwrap();
         let session2 = parse_participants(session2_csv.as_bytes(), "csv").unwrap();
 
-        let report = generate_report(vec![session1, session2], config).expect("Failed to generate report");
+        let report =
+            generate_report(vec![session1, session2], config).expect("Failed to generate report");
 
         assert_eq!(report.sessions, 2);
         assert_eq!(report.students.len(), 3);
 
         // Verify John: 1 Normal, 0 Late, 1 Absent. Score = 1.0
-        let john = report.students.iter().find(|s| s.email == "john@example.com").unwrap();
+        let john = report
+            .students
+            .iter()
+            .find(|s| s.email == "john@example.com")
+            .unwrap();
         assert_eq!(john.normal, 1);
         assert_eq!(john.late, 0);
         assert_eq!(john.absent, 1);
         assert_eq!(john.score, 1.0);
 
         // Verify Jane: 1 Normal, 1 Late, 0 Absent. Score = 1.0 + 0.5 = 1.5
-        let jane = report.students.iter().find(|s| s.email == "jane@example.com").unwrap();
+        let jane = report
+            .students
+            .iter()
+            .find(|s| s.email == "jane@example.com")
+            .unwrap();
         assert_eq!(jane.normal, 1);
         assert_eq!(jane.late, 1);
         assert_eq!(jane.absent, 0);
         assert_eq!(jane.score, 1.5);
 
         // Verify Bob: 1 Normal, 0 Late, 1 Absent (Session 1). Score = 1.0
-        let bob = report.students.iter().find(|s| s.email == "bob@example.com").unwrap();
+        let bob = report
+            .students
+            .iter()
+            .find(|s| s.email == "bob@example.com")
+            .unwrap();
         assert_eq!(bob.normal, 1);
         assert_eq!(bob.late, 0);
         assert_eq!(bob.absent, 1);
@@ -580,13 +615,13 @@ mod tests {
 
     #[test]
     fn test_detect_delimiter() {
-         let comma_csv = b"Name,Email,First Join\nJohn,j@e.com,Time";
-         assert_eq!(detect_delimiter(comma_csv), b',');
+        let comma_csv = b"Name,Email,First Join\nJohn,j@e.com,Time";
+        assert_eq!(detect_delimiter(comma_csv), b',');
 
-         let tab_csv = b"Name\tEmail\tFirst Join\nJohn\tj@e.com\tTime";
-         assert_eq!(detect_delimiter(tab_csv), b'\t');
+        let tab_csv = b"Name\tEmail\tFirst Join\nJohn\tj@e.com\tTime";
+        assert_eq!(detect_delimiter(tab_csv), b'\t');
 
-         let semi_csv = b"Name;Email;First Join\nJohn;j@e.com;Time";
-         assert_eq!(detect_delimiter(semi_csv), b';');
+        let semi_csv = b"Name;Email;First Join\nJohn;j@e.com;Time";
+        assert_eq!(detect_delimiter(semi_csv), b';');
     }
 }

@@ -2,12 +2,13 @@ use std::fs::File;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 
-use genpdf::{style::{Color, Style}, Element};
 use genpdf::elements::PaddedElement;
-
-use crate::core::{
-    self, AttendanceConfig, AttendanceReport, ReportFormat, Participant
+use genpdf::{
+    Element,
+    style::{Color, Style},
 };
+
+use crate::core::{self, AttendanceConfig, AttendanceReport, Participant, ReportFormat};
 
 #[derive(Debug, Clone)]
 pub struct AppState {
@@ -227,10 +228,10 @@ fn write_pdf(path: &Path, report: &AttendanceReport) -> Result<(), String> {
             .element(padded_text(student.normal.to_string(), row_style))
             .element(padded_text(student.late.to_string(), row_style))
             .element(padded_text(student.absent.to_string(), row_style))
-            .element(padded_text(format!(
-                "{:.1}/{:.1}",
-                student.score, report.total_points
-            ), row_style))
+            .element(padded_text(
+                format!("{:.1}/{:.1}", student.score, report.total_points),
+                row_style,
+            ))
             .push()
             .map_err(|error| format!("Failed to write PDF row: {error}"))?;
     }
@@ -273,7 +274,11 @@ mod tests {
         let file_path = dir.path().join("session1.csv");
         let mut file = File::create(&file_path).unwrap();
         // Quote the date field as per CSV requirement for commas
-        writeln!(file, "Name,Email,First Join\nJohn Doe,john@example.com,\"10/25/23, 1:30:00 PM\"").unwrap();
+        writeln!(
+            file,
+            "Name,Email,First Join\nJohn Doe,john@example.com,\"10/25/23, 1:30:00 PM\""
+        )
+        .unwrap();
 
         let config = AttendanceConfig {
             class_start: "13:30".to_string(),
@@ -285,7 +290,8 @@ mod tests {
         };
 
         // Test loading from directory
-        let report = load_attendance(dir.path().to_path_buf(), config.clone()).expect("Failed to load from dir");
+        let report = load_attendance(dir.path().to_path_buf(), config.clone())
+            .expect("Failed to load from dir");
         assert_eq!(report.sessions, 1);
         assert_eq!(report.students.len(), 1);
 
@@ -301,18 +307,16 @@ mod tests {
         let file_path = dir.path().join("output.csv");
 
         let report = AttendanceReport {
-            students: vec![
-                StudentRecord {
-                    name: "John".to_string(),
-                    surname: "Doe".to_string(),
-                    id: "john".to_string(),
-                    email: "john@example.com".to_string(),
-                    normal: 1,
-                    late: 0,
-                    absent: 0,
-                    score: 1.0,
-                }
-            ],
+            students: vec![StudentRecord {
+                name: "John".to_string(),
+                surname: "Doe".to_string(),
+                id: "john".to_string(),
+                email: "john@example.com".to_string(),
+                normal: 1,
+                late: 0,
+                absent: 0,
+                score: 1.0,
+            }],
             sessions: 1,
             total_points: 10.0,
         };
@@ -330,18 +334,16 @@ mod tests {
         let file_path = dir.path().join("output.txt");
 
         let report = AttendanceReport {
-            students: vec![
-                StudentRecord {
-                    name: "John".to_string(),
-                    surname: "Doe".to_string(),
-                    id: "john".to_string(),
-                    email: "john@example.com".to_string(),
-                    normal: 1,
-                    late: 0,
-                    absent: 0,
-                    score: 1.0,
-                }
-            ],
+            students: vec![StudentRecord {
+                name: "John".to_string(),
+                surname: "Doe".to_string(),
+                id: "john".to_string(),
+                email: "john@example.com".to_string(),
+                normal: 1,
+                late: 0,
+                absent: 0,
+                score: 1.0,
+            }],
             sessions: 1,
             total_points: 10.0,
         };
@@ -367,7 +369,11 @@ mod tests {
         // Test non-existent directory
         let result = load_attendance(PathBuf::from("non_existent_dir_12345"), config.clone());
         assert!(result.is_err());
-        assert!(result.unwrap_err().contains("Please select a valid directory or attendance file."));
+        assert!(
+            result
+                .unwrap_err()
+                .contains("Please select a valid directory or attendance file.")
+        );
 
         // Test directory with no valid files
         let dir = tempfile::tempdir().unwrap();
@@ -376,7 +382,11 @@ mod tests {
 
         let result = load_attendance(dir.path().to_path_buf(), config.clone());
         assert!(result.is_err());
-        assert!(result.unwrap_err().contains("No attendance CSV/XLSX files found"));
+        assert!(
+            result
+                .unwrap_err()
+                .contains("No attendance CSV/XLSX files found")
+        );
 
         // Test invalid file type selected directly
         let file_path = dir.path().join("invalid.txt");

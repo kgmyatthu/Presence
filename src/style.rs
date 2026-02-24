@@ -103,7 +103,6 @@ impl container::StyleSheet for InputGroup {
     }
 }
 
-
 pub struct MainBg;
 impl container::StyleSheet for MainBg {
     type Style = Theme;
@@ -274,7 +273,7 @@ impl button::StyleSheet for PrimaryButton {
     fn active(&self, _theme: &Theme) -> button::Appearance {
         button::Appearance {
             background: Some(Background::Color(BLUE)), // Electric Blue
-            text_color: BASE03, // Dark text on bright bg
+            text_color: BASE03,                        // Dark text on bright bg
             border: Border {
                 color: CYAN,
                 width: 1.0,
